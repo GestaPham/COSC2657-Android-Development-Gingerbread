@@ -1,4 +1,4 @@
-package com.gingerbread.asm3;
+package com.gingerbread.asm3.Views.Home;
 
 import android.os.Bundle;
 
