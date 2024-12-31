@@ -1,26 +1,70 @@
-package com.gingerbread.asm3.Views.Authentication;
+package com.gingerbread.asm3;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.AuthenticationService;
+import com.gingerbread.asm3.Views.Home.MainActivity;
+import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity {
+
+    private EditText editTextEmail, editTextPassword;
+    private Button buttonLogin, buttonRegistration;
+    private AuthenticationService authService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+
+        editTextEmail = findViewById(R.id.editTextEmail);
+        editTextPassword = findViewById(R.id.editTextPassword);
+        buttonLogin = findViewById(R.id.buttonLogin);
+        buttonRegistration = findViewById(R.id.buttonRegistration);
+
+        authService = new AuthenticationService();
+
+        buttonLogin.setOnClickListener(v -> {
+            String email = editTextEmail.getText().toString().trim();
+            String password = editTextPassword.getText().toString().trim();
+
+            if (TextUtils.isEmpty(email)) {
+                editTextEmail.setError("Email is required");
+                return;
+            }
+
+            if (TextUtils.isEmpty(password)) {
+                editTextPassword.setError("Password is required");
+                return;
+            }
+
+            authService.loginUser(email, password, this, new AuthenticationService.AuthCallback() {
+                @Override
+                public void onSuccess(FirebaseUser user) {
+                    Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                    Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            });
         });
+
+
+/*        buttonRegister.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });*/
     }
 }
