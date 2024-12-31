@@ -1,16 +1,16 @@
-package com.gingerbread.asm3.Views.Profile;
+package com.gingerbread.asm3.Views.Chatbot;
 
 import android.os.Bundle;
 
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 
-public class ProfileActivity extends BaseActivity {
+public class ChatbotActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getLayoutInflater().inflate(R.layout.activity_profile, findViewById(R.id.activity_content));
+        getLayoutInflater().inflate(R.layout.activity_chatbot, findViewById(R.id.activity_content));
     }
 
     @Override
@@ -20,6 +20,6 @@ public class ProfileActivity extends BaseActivity {
 
     @Override
     protected int getSelectedMenuItemId() {
-        return R.id.nav_profile;
+        return R.id.nav_ai_chatbot;
     }
 }
