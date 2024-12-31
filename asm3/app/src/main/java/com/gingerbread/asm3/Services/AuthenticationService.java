@@ -8,7 +8,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public class AuthenticationService {
@@ -25,7 +24,8 @@ public class AuthenticationService {
                              String profilePictureUrl, Activity activity, AuthCallback callback) {
         firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(activity, task -> {
             if (!task.isSuccessful()) {
-                callback.onFailure("Registration failed: " + Objects.requireNonNull(task.getException()).getMessage());
+                String errorMessage = task.getException() != null ? task.getException().getMessage() : "Unknown error";
+                callback.onFailure("Registration failed: " + errorMessage);
                 return;
             }
 
@@ -40,18 +40,38 @@ public class AuthenticationService {
 
             FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask -> {
                 if (!tokenTask.isSuccessful()) {
-                    callback.onFailure("Failed to fetch FCM token: " + Objects.requireNonNull(tokenTask.getException()).getMessage());
+                    String errorMessage = tokenTask.getException() != null ? tokenTask.getException().getMessage() : "Unknown error";
+                    callback.onFailure("Failed to fetch FCM token: " + errorMessage);
                     return;
                 }
 
                 String fcmToken = tokenTask.getResult();
-                User user = new User(userId, name, email, profilePictureUrl, age, gender, nationality, religion, location, isPremium, fcmToken, shareToken);
+                if (fcmToken == null || fcmToken.isEmpty()) {
+                    callback.onFailure("Failed to fetch FCM token: Token is null or empty.");
+                    return;
+                }
+
+                User user = new User(
+                        userId,
+                        name,
+                        email,
+                        profilePictureUrl,
+                        age,
+                        gender,
+                        nationality,
+                        religion,
+                        location,
+                        isPremium,
+                        fcmToken,
+                        shareToken
+                );
 
                 firestore.collection("users").document(userId).set(user).addOnCompleteListener(firestoreTask -> {
                     if (firestoreTask.isSuccessful()) {
                         callback.onSuccess(firebaseUser);
                     } else {
-                        callback.onFailure("Failed to save user data: " + Objects.requireNonNull(firestoreTask.getException()).getMessage());
+                        String errorMessage = firestoreTask.getException() != null ? firestoreTask.getException().getMessage() : "Unknown error";
+                        callback.onFailure("Failed to save user data: " + errorMessage);
                     }
                 });
             });
@@ -61,7 +81,8 @@ public class AuthenticationService {
     public void loginUser(String email, String password, Activity activity, AuthCallback callback) {
         firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(activity, task -> {
             if (!task.isSuccessful()) {
-                callback.onFailure("Login failed: " + Objects.requireNonNull(task.getException()).getMessage());
+                String errorMessage = task.getException() != null ? task.getException().getMessage() : "Unknown error";
+                callback.onFailure("Login failed: " + errorMessage);
                 return;
             }
 
@@ -75,16 +96,23 @@ public class AuthenticationService {
 
             FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask -> {
                 if (!tokenTask.isSuccessful()) {
-                    callback.onFailure("Failed to fetch FCM token: " + Objects.requireNonNull(tokenTask.getException()).getMessage());
+                    String errorMessage = tokenTask.getException() != null ? tokenTask.getException().getMessage() : "Unknown error";
+                    callback.onFailure("Failed to fetch FCM token: " + errorMessage);
                     return;
                 }
 
                 String fcmToken = tokenTask.getResult();
+                if (fcmToken == null || fcmToken.isEmpty()) {
+                    callback.onFailure("Failed to fetch FCM token: Token is null or empty.");
+                    return;
+                }
+
                 firestore.collection("users").document(userId).update("fcmToken", fcmToken).addOnCompleteListener(updateTask -> {
                     if (updateTask.isSuccessful()) {
                         callback.onSuccess(firebaseUser);
                     } else {
-                        callback.onFailure("Failed to update FCM token: " + Objects.requireNonNull(updateTask.getException()).getMessage());
+                        String errorMessage = updateTask.getException() != null ? updateTask.getException().getMessage() : "Unknown error";
+                        callback.onFailure("Failed to update FCM token: " + errorMessage);
                     }
                 });
             });
