@@ -47,6 +47,18 @@
             android:textStyle="bold" />
 
         <EditText
+            android:id="@+id/editTextConfirmPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@android:drawable/editbox_background_normal"
+            android:hint="Confirm Password"
+            android:inputType="textPassword"
+            android:padding="12dp"
+            android:textColor="@color/black"
+            android:textStyle="bold" />
+
+        <EditText
             android:id="@+id/editTextAge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -70,23 +82,17 @@
             android:textColor="@color/black"
             android:textStyle="bold" />
 
-        <Spinner
-            android:id="@+id/spinnerCountry"
+        <EditText
+            android:id="@+id/editTextNationality"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:background="@android:drawable/editbox_background_normal"
+            android:hint="Nationality"
+            android:inputType="textPersonName"
             android:padding="12dp"
-            android:textColor="@color/black" />
-
-        <Spinner
-            android:id="@+id/spinnerCity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@android:drawable/editbox_background_normal"
-            android:padding="12dp"
-            android:textColor="@color/black" />
+            android:textColor="@color/black"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/buttonRegister"
