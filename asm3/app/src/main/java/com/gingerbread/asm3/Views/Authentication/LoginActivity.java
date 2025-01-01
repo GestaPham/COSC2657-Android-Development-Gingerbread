@@ -1,4 +1,4 @@
-package com.gingerbread.asm3;
+package com.gingerbread.asm3.Views.Authentication;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,7 +9,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.AuthenticationService;
+import com.gingerbread.asm3.Views.Authentication.RegistrationActivity;
 import com.gingerbread.asm3.Views.Home.MainActivity;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -61,10 +63,9 @@ public class LoginActivity extends AppCompatActivity {
             });
         });
 
-
-/*        buttonRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+        buttonRegistration.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegistrationActivity.class);
             startActivity(intent);
-        });*/
+        });
     }
 }
