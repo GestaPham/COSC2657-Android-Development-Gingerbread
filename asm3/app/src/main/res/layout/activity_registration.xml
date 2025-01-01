@@ -15,84 +15,120 @@
             android:id="@+id/editTextName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:drawable/editbox_background_normal"
             android:hint="Name"
             android:inputType="textPersonName"
             android:padding="12dp"
             android:textColor="@color/black"
             android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/errorName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_red_dark"
+            android:visibility="visible" />
+
         <EditText
             android:id="@+id/editTextEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@android:drawable/editbox_background_normal"
             android:hint="Email"
             android:inputType="textEmailAddress"
             android:padding="12dp"
             android:textColor="@color/black"
             android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/errorEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_red_dark"
+            android:visibility="visible" />
+
         <EditText
             android:id="@+id/editTextPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@android:drawable/editbox_background_normal"
             android:hint="Password"
             android:inputType="textPassword"
             android:padding="12dp"
             android:textColor="@color/black"
             android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/errorPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_red_dark"
+            android:visibility="visible" />
+
         <EditText
             android:id="@+id/editTextConfirmPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@android:drawable/editbox_background_normal"
             android:hint="Confirm Password"
             android:inputType="textPassword"
             android:padding="12dp"
             android:textColor="@color/black"
             android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/errorConfirmPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_red_dark"
+            android:visibility="visible" />
+
         <EditText
             android:id="@+id/editTextAge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@android:drawable/editbox_background_normal"
             android:hint="Age"
             android:inputType="number"
             android:padding="12dp"
             android:textColor="@color/black"
             android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/errorAge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_red_dark"
+            android:visibility="visible" />
+
         <EditText
             android:id="@+id/editTextGender"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@android:drawable/editbox_background_normal"
             android:hint="Gender"
             android:inputType="textPersonName"
             android:padding="12dp"
             android:textColor="@color/black"
             android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/errorGender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_red_dark"
+            android:visibility="visible" />
+
         <EditText
             android:id="@+id/editTextNationality"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@android:drawable/editbox_background_normal"
             android:hint="Nationality"
             android:inputType="textPersonName"
             android:padding="12dp"
             android:textColor="@color/black"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/errorNationality"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_red_dark"
+            android:visibility="visible" />
 
         <Button
             android:id="@+id/buttonRegister"

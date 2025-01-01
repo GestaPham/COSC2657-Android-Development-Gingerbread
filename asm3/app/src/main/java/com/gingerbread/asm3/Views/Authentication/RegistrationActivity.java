@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +18,7 @@ import java.util.regex.Pattern;
 public class RegistrationActivity extends AppCompatActivity {
 
     private EditText editTextName, editTextEmail, editTextPassword, editTextConfirmPassword, editTextAge, editTextGender, editTextNationality;
+    private TextView errorName, errorEmail, errorPassword, errorConfirmPassword, errorAge, errorGender, errorNationality;
     private Button buttonRegister;
     private AuthenticationService authService;
 
@@ -34,6 +36,15 @@ public class RegistrationActivity extends AppCompatActivity {
         editTextAge = findViewById(R.id.editTextAge);
         editTextGender = findViewById(R.id.editTextGender);
         editTextNationality = findViewById(R.id.editTextNationality);
+
+        errorName = findViewById(R.id.errorName);
+        errorEmail = findViewById(R.id.errorEmail);
+        errorPassword = findViewById(R.id.errorPassword);
+        errorConfirmPassword = findViewById(R.id.errorConfirmPassword);
+        errorAge = findViewById(R.id.errorAge);
+        errorGender = findViewById(R.id.errorGender);
+        errorNationality = findViewById(R.id.errorNationality);
+
         buttonRegister = findViewById(R.id.buttonRegister);
 
         buttonRegister.setOnClickListener(v -> registerUser());
@@ -48,43 +59,78 @@ public class RegistrationActivity extends AppCompatActivity {
         String gender = editTextGender.getText().toString().trim();
         String nationality = editTextNationality.getText().toString().trim();
 
-        if (TextUtils.isEmpty(name) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)
-                || TextUtils.isEmpty(confirmPassword) || TextUtils.isEmpty(ageStr)
-                || TextUtils.isEmpty(gender) || TextUtils.isEmpty(nationality)) {
-            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-            return;
+        clearErrors();
+
+        boolean isValid = true;
+
+        if (TextUtils.isEmpty(name)) {
+            errorName.setText("Name is required");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(email)) {
+            errorEmail.setText("Email is required");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(password)) {
+            errorPassword.setText("Password is required");
+            isValid = false;
+        } else if (!Pattern.matches("(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}", password)) {
+            errorPassword.setText("Password must contain at least one number, one uppercase letter, one lowercase letter, and at least 8 characters.");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(confirmPassword)) {
+            errorConfirmPassword.setText("Password confirmation is required");
+            isValid = false;
+        } else if (!password.equals(confirmPassword)) {
+            errorConfirmPassword.setText("Passwords do not match");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(ageStr)) {
+            errorAge.setText("Age is required");
+            isValid = false;
+        } else {
+            try {
+                Integer.parseInt(ageStr);
+            } catch (NumberFormatException e) {
+                errorAge.setText("Age must be a valid number");
+                isValid = false;
+            }
+        }
+        if (TextUtils.isEmpty(gender)) {
+            errorGender.setText("Gender is required");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(nationality)) {
+            errorNationality.setText("Nationality is required");
+            isValid = false;
         }
 
-        if (!password.equals(confirmPassword)) {
-            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (!isValid) return;
 
-        if (!Pattern.matches("(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,}", password)) {
-            Toast.makeText(this, "Password must contain at least one number, one uppercase letter, one lowercase letter, and at least 8 characters.", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        int age;
-        try {
-            age = Integer.parseInt(ageStr);
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Age must be a valid number", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        int age = Integer.parseInt(ageStr);
 
         authService.registerUser(email, password, name, age, gender, nationality, "",
                 "", false, "", this, new AuthenticationService.AuthCallback() {
                     @Override
                     public void onSuccess(FirebaseUser user) {
-                        Toast.makeText(RegistrationActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegistrationActivity.this,"Registration successful", Toast.LENGTH_SHORT).show();
                         finish();
                     }
 
                     @Override
                     public void onFailure(String errorMessage) {
-                        Toast.makeText(RegistrationActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                        errorEmail.setText(errorMessage);
                     }
                 });
+    }
+
+    private void clearErrors() {
+        errorName.setText("");
+        errorEmail.setText("");
+        errorPassword.setText("");
+        errorConfirmPassword.setText("");
+        errorAge.setText("");
+        errorGender.setText("");
+        errorNationality.setText("");
     }
 }
