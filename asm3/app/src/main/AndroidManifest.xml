@@ -35,6 +35,12 @@
             android:name=".Views.Profile.ProfileActivity"
             android:exported="false" />
         <activity
+            android:name=".Views.Profile.ProfileDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Views.Profile.EditProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".Views.Authentication.RegistrationActivity"
             android:exported="false" />
         <activity

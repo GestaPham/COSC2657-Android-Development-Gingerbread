@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/light_background"
-    android:padding="24dp"
+    android:clickable="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:clickable="true">
+    android:padding="24dp">
 
 
     <LinearLayout
@@ -30,7 +30,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Back"
                 android:padding="12dp"
-                android:src="@drawable/ic_arrow_back"/>
+                android:src="@drawable/ic_arrow_back" />
 
             <TextView
                 android:id="@+id/textViewRegisterTitle"
@@ -187,7 +187,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:backgroundTint="@color/pastel_blue"
+            android:backgroundTint="@color/light_blue"
             android:padding="16dp"
             android:text="Register"
             android:textColor="@android:color/white"
