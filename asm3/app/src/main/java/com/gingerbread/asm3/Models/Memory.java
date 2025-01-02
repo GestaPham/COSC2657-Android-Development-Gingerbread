@@ -6,16 +6,20 @@ public class Memory {
     private String date;
     private String note;
     private String imageUrl;
+    private String userId;
+    private String relationshipId;
 
     public Memory() {
     }
 
-    public Memory(String memoryId, String memoryName, String date, String note, String imageUrl) {
+    public Memory(String memoryId, String memoryName, String date, String note, String imageUrl, String userId, String relationshipId) {
         this.memoryId = memoryId;
         this.memoryName = memoryName;
         this.date = date;
         this.note = note;
         this.imageUrl = imageUrl;
+        this.userId = userId;
+        this.relationshipId = relationshipId;
     }
 
     public String getMemoryId() {
@@ -56,5 +60,21 @@ public class Memory {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getRelationshipId() {
+        return relationshipId;
+    }
+
+    public void setRelationshipId(String relationshipId) {
+        this.relationshipId = relationshipId;
     }
 }

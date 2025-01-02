@@ -5,21 +5,27 @@
       "memoryName": "400 Days",
       "date": "15/11/2024",
       "note": "It has been 400 days since our first date.",
-      "imageUrl": "https://www.susansflowershop.com/upload/mt/susan799/products/Interflora/20223084-hand-tied-bouquet-made-with-the-finest-flowers-2.jpg"
+      "imageUrl": "https://www.susansflowershop.com/upload/mt/susan799/products/Interflora/20223084-hand-tied-bouquet-made-with-the-finest-flowers-2.jpg",
+      "userId": "user123",
+      "relationshipId": "relationship456"
     },
     {
       "memoryId": "2",
       "memoryName": "1 Year Anniversary",
       "date": "15/7/2024",
       "note": "We have reached another milestone together!",
-      "imageUrl": "https://hips.hearstapps.com/vader-prod.s3.amazonaws.com/1682529647-71Rf7fADdfL.jpg?crop=1xw:1.00xh;center,top&resize=980:*"
+      "imageUrl": "https://hips.hearstapps.com/vader-prod.s3.amazonaws.com/1682529647-71Rf7fADdfL.jpg?crop=1xw:1.00xh;center,top&resize=980:*",
+      "userId": "user123",
+      "relationshipId": "relationship457"
     },
     {
       "memoryId": "3",
       "memoryName": "Christmas Day",
       "date": "25/12/2024",
       "note": "Celebrating a magical Christmas together.",
-      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/62/Gifts_xmas.jpg"
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/62/Gifts_xmas.jpg",
+      "userId": "user123",
+      "relationshipId": "relationship4568"
     }
   ]
 }

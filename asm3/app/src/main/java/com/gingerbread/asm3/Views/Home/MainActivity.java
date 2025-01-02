@@ -229,7 +229,16 @@ public class MainActivity extends BaseActivity {
             List<Memory> memories = new ArrayList<>();
             for (int i = 0; i < memoryArray.length(); i++) {
                 JSONObject obj = memoryArray.getJSONObject(i);
-                memories.add(new Memory(obj.getString("memoryId"), obj.getString("memoryName"), obj.getString("date"), obj.getString("note"), obj.getString("imageUrl")));
+
+                memories.add(new Memory(
+                        obj.getString("memoryId"),
+                        obj.getString("memoryName"),
+                        obj.getString("date"),
+                        obj.getString("note"),
+                        obj.getString("imageUrl"),
+                        obj.optString("userId", "defaultUserId"),
+                        obj.optString("relationshipId", "defaultRelationshipId")
+                ));
             }
 
             memoryAdapter = new MemoryAdapter(memories, memory -> {
