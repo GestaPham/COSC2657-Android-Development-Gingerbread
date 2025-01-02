@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
@@ -12,9 +15,17 @@ import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 public class ProfileDetailsActivity extends BaseActivity {
 
     private ImageView profileImageView;
-    private TextView textViewName, textViewEditPartner;
+    private TextView textViewName, textViewEditProfile;
     private TextView textViewAge, textViewGender, textViewNationality, textViewReligion, textViewLocation;
     private User user;
+
+    private final ActivityResultLauncher<Intent> editProfileLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    user = (User) result.getData().getSerializableExtra("user");
+                    loadProfileDetails();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,7 +34,7 @@ public class ProfileDetailsActivity extends BaseActivity {
 
         profileImageView = findViewById(R.id.profileImageView);
         textViewName = findViewById(R.id.textViewName);
-        textViewEditPartner = findViewById(R.id.textViewEditProfile);
+        textViewEditProfile = findViewById(R.id.textViewEditProfile);
         textViewAge = findViewById(R.id.textViewAge);
         textViewGender = findViewById(R.id.textViewGender);
         textViewNationality = findViewById(R.id.textViewNationality);
@@ -33,10 +44,10 @@ public class ProfileDetailsActivity extends BaseActivity {
         user = (User) getIntent().getSerializableExtra("user");
         loadProfileDetails();
 
-        textViewEditPartner.setOnClickListener(v -> {
+        textViewEditProfile.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileDetailsActivity.this, EditProfileActivity.class);
             intent.putExtra("user", user);
-            startActivity(intent);
+            editProfileLauncher.launch(intent);
         });
     }
 

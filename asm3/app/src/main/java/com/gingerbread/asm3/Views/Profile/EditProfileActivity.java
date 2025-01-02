@@ -31,6 +31,7 @@ public class EditProfileActivity extends BaseActivity {
 
         userService = new UserService();
 
+        profileImageView = findViewById(R.id.profileImageView);
         editTextName = findViewById(R.id.editTextName);
         editTextAge = findViewById(R.id.editTextAge);
         editTextGender = findViewById(R.id.editTextGender);

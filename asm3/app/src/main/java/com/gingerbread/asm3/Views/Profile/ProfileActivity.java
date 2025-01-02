@@ -7,6 +7,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.UserService;
@@ -24,6 +27,14 @@ public class ProfileActivity extends BaseActivity {
 
     private UserService userService;
     private User user;
+
+    private final ActivityResultLauncher<Intent> profileDetailsLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    user = (User) result.getData().getSerializableExtra("user");
+                    loadUserProfile();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,15 +56,15 @@ public class ProfileActivity extends BaseActivity {
         buttonProfileDetails.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, ProfileDetailsActivity.class);
             intent.putExtra("user", user);
-            startActivityForResult(intent, 100);
+            profileDetailsLauncher.launch(intent);
         });
 
         buttonMyPartner.setOnClickListener(v -> {
-            // view/set up partner/ accept/deny
+            // Logic to view or set up partner, accept, or deny
         });
 
         buttonSupport.setOnClickListener(v -> {
-            // customer support
+            // Logic to open customer support activity
         });
 
         buttonLogout.setOnClickListener(v -> {
