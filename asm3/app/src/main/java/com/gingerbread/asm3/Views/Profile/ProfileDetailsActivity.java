@@ -1,65 +1,65 @@
 package com.gingerbread.asm3.Views.Profile;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
-import com.gingerbread.asm3.Services.UserService;
+import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 
-import java.util.Map;
-
-public class ProfileDetailsActivity extends AppCompatActivity {
+public class ProfileDetailsActivity extends BaseActivity {
 
     private ImageView profileImageView;
     private TextView textViewName, textViewEditPartner;
     private TextView textViewAge, textViewGender, textViewNationality, textViewReligion, textViewLocation;
-    private UserService userService;
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_profile_details);
-
-        userService = new UserService();
+        getLayoutInflater().inflate(R.layout.activity_profile_details, findViewById(R.id.activity_content));
 
         profileImageView = findViewById(R.id.profileImageView);
         textViewName = findViewById(R.id.textViewName);
-        textViewEditPartner = findViewById(R.id.textViewEditPartner);
+        textViewEditPartner = findViewById(R.id.textViewEditProfile);
         textViewAge = findViewById(R.id.textViewAge);
         textViewGender = findViewById(R.id.textViewGender);
         textViewNationality = findViewById(R.id.textViewNationality);
         textViewReligion = findViewById(R.id.textViewReligion);
         textViewLocation = findViewById(R.id.textViewLocation);
 
+        user = (User) getIntent().getSerializableExtra("user");
         loadProfileDetails();
 
         textViewEditPartner.setOnClickListener(v -> {
-            //startActivity(new Intent(ProfileDetailsActivity.this, EditPartnerActivity.class));
+            Intent intent = new Intent(ProfileDetailsActivity.this, EditProfileActivity.class);
+            intent.putExtra("user", user);
+            startActivity(intent);
         });
     }
 
     private void loadProfileDetails() {
-        String userId = userService.getCurrentUserId();
-        if (userId != null) {
-            userService.getUser(userId, new UserService.UserCallback() {
-                @Override
-                public void onSuccess(Map<String, Object> userData) {
-                    textViewName.setText(userData.get("name").toString());
-                    textViewAge.setText(userData.get("age").toString());
-                    textViewGender.setText(userData.get("gender").toString());
-                    textViewNationality.setText(userData.get("nationality").toString());
-                    textViewReligion.setText(userData.get("religion").toString());
-                    textViewLocation.setText(userData.get("location").toString());
-                }
-
-                @Override
-                public void onFailure(String errorMessage) {
-                    textViewName.setText("Error loading details");
-                }
-            });
+        if (user != null) {
+            textViewName.setText(user.getName());
+            textViewAge.setText(String.valueOf(user.getAge()));
+            textViewGender.setText(user.getGender());
+            textViewNationality.setText(user.getNationality());
+            textViewReligion.setText(user.getReligion());
+            textViewLocation.setText(user.getLocation());
+        } else {
+            textViewName.setText("Error loading details");
         }
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_base;
+    }
+
+    @Override
+    protected int getSelectedMenuItemId() {
+        return R.id.nav_profile;
     }
 }

@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.Authentication.LoginActivity;
@@ -22,6 +23,7 @@ public class ProfileActivity extends BaseActivity {
     private Button buttonMyPartner, buttonProfileDetails, buttonSupport, buttonLogout;
 
     private UserService userService;
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,16 +42,18 @@ public class ProfileActivity extends BaseActivity {
 
         loadUserProfile();
 
-        buttonMyPartner.setOnClickListener(v -> {
-            startActivity(new Intent(ProfileActivity.this, PartnerProfileActivity.class));
+        buttonProfileDetails.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, ProfileDetailsActivity.class);
+            intent.putExtra("user", user);
+            startActivityForResult(intent, 100);
         });
 
-        buttonProfileDetails.setOnClickListener(v -> {
-            startActivity(new Intent(ProfileActivity.this, ProfileDetailsActivity.class));
+        buttonMyPartner.setOnClickListener(v -> {
+            // view/set up partner/ accept/deny
         });
 
         buttonSupport.setOnClickListener(v -> {
-            //startActivity(new Intent(ProfileActivity.this, SupportActivity.class));
+            // customer support
         });
 
         buttonLogout.setOnClickListener(v -> {
@@ -67,21 +71,23 @@ public class ProfileActivity extends BaseActivity {
             userService.getUser(userId, new UserService.UserCallback() {
                 @Override
                 public void onSuccess(Map<String, Object> userData) {
-                    textViewName.setText(userData.get("name").toString());
+                    user = new User();
+                    user.setUserId(userId);
+                    user.setName(userData.get("name") != null ? userData.get("name").toString() : "");
+                    user.setAge(userData.get("age") != null ? (int) ((long) userData.get("age")) : 0);
+                    user.setGender(userData.get("gender") != null ? userData.get("gender").toString() : "");
+                    user.setNationality(userData.get("nationality") != null ? userData.get("nationality").toString() : "");
+                    user.setReligion(userData.get("religion") != null ? userData.get("religion").toString() : "");
+                    user.setLocation(userData.get("location") != null ? userData.get("location").toString() : "");
+                    user.setPremium(userData.get("isPremium") != null && (boolean) userData.get("isPremium"));
 
-                    boolean isPremium = (boolean) userData.getOrDefault("isPremium", false);
-                    if (isPremium) {
-                        textViewPremiumStatus.setText("Premium User");
-                        textViewPremiumStatus.setVisibility(View.VISIBLE);
-                    } else {
-                        textViewPremiumStatus.setVisibility(View.GONE);
-                    }
+                    textViewName.setText(user.getName());
+                    textViewPremiumStatus.setVisibility(user.isPremium() ? View.VISIBLE : View.GONE);
                 }
 
                 @Override
                 public void onFailure(String errorMessage) {
                     textViewName.setText("Error loading profile");
-                    textViewPremiumStatus.setVisibility(View.GONE);
                 }
             });
         }
