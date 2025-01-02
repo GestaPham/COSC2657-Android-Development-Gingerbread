@@ -1,0 +1,22 @@
+[
+  {
+    "title": "It's nearly your anniversary!",
+    "description": "Don't forget to get a nice gift!",
+    "isRead": false
+  },
+  {
+    "title": "Love is in the details",
+    "description": "Find ways to express your love.",
+    "isRead": true
+  },
+  {
+    "title": "Imagine this...",
+    "description": "Plan a surprise dinner for your partner.",
+    "isRead": false
+  },
+  {
+    "title": "Audrey Hepburn Quote",
+    "description": "‘The best thing to hold onto in life is each other.’",
+    "isRead": true
+  }
+]

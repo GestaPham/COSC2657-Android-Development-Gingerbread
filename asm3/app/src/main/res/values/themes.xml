@@ -1,13 +1,21 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme -->
     <style name="Base.Theme.Asm" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here -->
+        <item name="colorPrimary">#F6D5D6</item> <!-- Soft pink -->
+        <item name="colorPrimaryVariant">#FBE2E3</item> <!-- Lighter pink -->
+        <item name="colorSecondary">#FCEDEB</item> <!-- Subtle peach -->
+        <item name="colorOnPrimary">#FFFFFF</item> <!-- White text/icons -->
+        <item name="colorSurface">#FFFFFF</item> <!-- White surfaces -->
+        <item name="colorOnSurface">#333333</item> <!-- Dark text/icons -->
         <item name="bottomNavigationStyle">@style/CustomBottomNavigation</item>
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
     <style name="Theme.Asm" parent="Base.Theme.Asm" />
+
     <style name="CustomBottomNavigation" parent="Widget.MaterialComponents.BottomNavigationView">
-        <item name="backgroundTint">@android:color/white</item>
+        <item name="backgroundTint">#FFFFFF</item> <!-- White background for bottom navigation -->
+        <item name="itemIconTint">#F6D5D6</item> <!-- Pink icons -->
+        <item name="itemTextColor">#F6D5D6</item> <!-- Pink text -->
     </style>
 </resources>
