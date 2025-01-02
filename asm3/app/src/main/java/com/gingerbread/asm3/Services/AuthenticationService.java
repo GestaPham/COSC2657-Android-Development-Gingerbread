@@ -119,6 +119,44 @@ public class AuthenticationService {
         });
     }
 
+    public void isFcmTokenValid(Activity activity, AuthCallback callback) {
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser == null) {
+            callback.onFailure("No user is currently logged in.");
+            return;
+        }
+
+        String userId = currentUser.getUid();
+
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(activity, tokenTask -> {
+            if (!tokenTask.isSuccessful()) {
+                String errorMessage = tokenTask.getException() != null ? tokenTask.getException().getMessage() : "Unknown error";
+                callback.onFailure("Failed to fetch current FCM token: " + errorMessage);
+                return;
+            }
+
+            String currentFcmToken = tokenTask.getResult();
+            if (currentFcmToken == null || currentFcmToken.isEmpty()) {
+                callback.onFailure("Current FCM token is null or empty.");
+                return;
+            }
+
+            firestore.collection("users").document(userId).get().addOnCompleteListener(firestoreTask -> {
+                if (firestoreTask.isSuccessful() && firestoreTask.getResult() != null && firestoreTask.getResult().exists()) {
+                    String storedFcmToken = firestoreTask.getResult().getString("fcmToken");
+                    if (currentFcmToken.equals(storedFcmToken)) {
+                        callback.onSuccess(currentUser);
+                    } else {
+                        callback.onFailure("FCM token is invalid or outdated.");
+                    }
+                } else {
+                    String errorMessage = firestoreTask.getException() != null ? firestoreTask.getException().getMessage() : "User data not found.";
+                    callback.onFailure("Failed to fetch stored FCM token: " + errorMessage);
+                }
+            });
+        });
+    }
+
     public void logoutUser() {
         firebaseAuth.signOut();
     }
