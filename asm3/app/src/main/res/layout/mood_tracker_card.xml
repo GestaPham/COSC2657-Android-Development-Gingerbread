@@ -1,5 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mood_tracker_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="16dp"
@@ -20,7 +22,7 @@
             android:layout_height="wrap_content"
             android:text="How Are You Today?"
             android:textColor="@android:color/white"
-            android:textSize="26sp"
+            android:textSize="26dp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -59,7 +61,7 @@
                     android:gravity="center"
                     android:text="Bad"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    android:textSize="16dp" />
             </LinearLayout>
 
             <!-- Mood tired -->
@@ -83,7 +85,7 @@
                     android:gravity="center"
                     android:text="Tired"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    android:textSize="16dp" />
             </LinearLayout>
 
             <!-- Mood okay -->
@@ -107,7 +109,7 @@
                     android:gravity="center"
                     android:text="Okay"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    android:textSize="16dp" />
             </LinearLayout>
 
             <!-- Mood happy -->
@@ -131,7 +133,7 @@
                     android:gravity="center"
                     android:text="Happy"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    android:textSize="16dp" />
             </LinearLayout>
 
             <!-- Mood excited -->
@@ -155,7 +157,7 @@
                     android:gravity="center"
                     android:text="Excited"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    android:textSize="16dp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -179,7 +181,7 @@
             android:gravity="center"
             android:text=""
             android:textColor="@android:color/black"
-            android:textSize="18sp"
+            android:textSize="18dp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -194,7 +196,7 @@
             android:gravity="center"
             android:text="Choose a mood to see advice"
             android:textColor="@android:color/black"
-            android:textSize="16sp"
+            android:textSize="16dp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

@@ -7,7 +7,8 @@
     android:layout_marginTop="24dp"
     android:padding="16dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="0dp">
+    app:cardElevation="0dp"
+    app:cardUseCompatPadding="false">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -22,7 +23,7 @@
             android:gravity="center"
             android:text="We’ve been together for"
             android:textColor="@android:color/black"
-            android:textSize="16sp"
+            android:textSize="26dp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -60,7 +61,7 @@
                         android:layout_height="wrap_content"
                         android:text="1"
                         android:textColor="@android:color/black"
-                        android:textSize="24sp"
+                        android:textSize="24dp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -93,7 +94,7 @@
                         android:layout_height="wrap_content"
                         android:text="5"
                         android:textColor="@android:color/black"
-                        android:textSize="24sp"
+                        android:textSize="24dp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -126,7 +127,7 @@
                         android:layout_height="wrap_content"
                         android:text="12"
                         android:textColor="@android:color/black"
-                        android:textSize="24sp"
+                        android:textSize="24dp"
                         android:textStyle="bold" />
 
                     <TextView
