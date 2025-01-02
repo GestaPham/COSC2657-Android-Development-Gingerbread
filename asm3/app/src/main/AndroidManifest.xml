@@ -17,9 +17,6 @@
         android:theme="@style/Theme.Asm"
         tools:targetApi="31">
         <activity
-            android:name=".Views.Notification.NotificationActivity"
-            android:exported="false" />
-        <activity
             android:name=".Views.Chatbot.ChatbotActivity"
             android:exported="false" />
         <activity
@@ -38,27 +35,31 @@
             android:name=".Views.Profile.ProfileActivity"
             android:exported="false" />
         <activity
+            android:name=".Views.Profile.ProfileDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Views.Profile.EditProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".Views.Authentication.RegistrationActivity"
             android:exported="false" />
         <activity
             android:name=".Views.Authentication.LoginActivity"
-            android:exported="true">
-
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-
-
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
-        </activity>
-        <activity
-            android:name=".Views.Home.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".Views.Home.MainActivity"
+            android:exported="true">
+            <!--            <intent-filter>
+                            <action android:name="android.intent.action.MAIN" />
+
+                            <category android:name="android.intent.category.LAUNCHER" />
+                        </intent-filter>-->
         </activity>
     </application>
 
