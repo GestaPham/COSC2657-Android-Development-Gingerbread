@@ -44,7 +44,7 @@
             android:id="@+id/imageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/send_circle"
+            android:src="@drawable/send_message_button"
             android:padding="1dp"
             />
 
