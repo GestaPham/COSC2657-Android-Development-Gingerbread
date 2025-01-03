@@ -1,22 +1,35 @@
 package com.gingerbread.asm3.Models;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
     private String userId;
     private String name;
     private String email;
     private String profilePictureUrl;
+    private int age;
+    private String gender;
+    private String nationality;
+    private String religion;
+    private String location;
     private boolean isPremium;
     private String fcmToken;            // For push notifications
-    private String shareToken;        // For linking with a partner
+    private String shareToken;          // For linking with a partner
 
     public User() {
     }
 
-    public User(String userId, String name, String email, String profilePictureUrl, boolean isPremium, String fcmToken, String shareToken) {
+    public User(String userId, String name, String email, String profilePictureUrl, int age, String gender,
+                String nationality, String religion, String location, boolean isPremium, String fcmToken, String shareToken) {
         this.userId = userId;
         this.name = name;
         this.email = email;
         this.profilePictureUrl = profilePictureUrl;
+        this.age = age;
+        this.gender = gender;
+        this.nationality = nationality;
+        this.religion = religion;
+        this.location = location;
         this.isPremium = isPremium;
         this.fcmToken = fcmToken;
         this.shareToken = shareToken;
@@ -54,6 +67,46 @@ public class User {
         this.profilePictureUrl = profilePictureUrl;
     }
 
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public String getReligion() {
+        return religion;
+    }
+
+    public void setReligion(String religion) {
+        this.religion = religion;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
     public boolean isPremium() {
         return isPremium;
     }
@@ -66,8 +119,8 @@ public class User {
         return fcmToken;
     }
 
-    public void setFcmToken(String notificationToken) {
-        this.fcmToken = notificationToken;
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 
     public String getShareToken() {
