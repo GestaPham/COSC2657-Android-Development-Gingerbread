@@ -15,9 +15,10 @@
             android:layout_height="40dp"
             app:shapeAppearanceOverlay="@style/profile_circle"
             android:layout_alignParentStart="true"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
+            android:paddingTop="5dp"
             android:src="#D9D9D9"
-            app:srcCompat="#D9D9D9"/>
+           />
 
         <TextView
             android:id="@+id/messageTextLeft"
