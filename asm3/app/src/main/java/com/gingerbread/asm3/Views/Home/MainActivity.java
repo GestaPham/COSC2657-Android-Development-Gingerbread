@@ -3,6 +3,7 @@ package com.gingerbread.asm3.Views.Home;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -11,7 +12,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.viewpager2.widget.ViewPager2;
+
 import com.bumptech.glide.Glide;
+import com.gingerbread.asm3.Adapter.MemoryAdapter;
+import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.Models.MoodLog;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
@@ -20,29 +25,36 @@ import com.gingerbread.asm3.Views.Notification.NotificationActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends BaseActivity {
 
     private ImageView imageViewProfile, notificationIcon, selectedMoodImage;
     private TextView textViewGreeting, textViewTogetherYears, textViewTogetherMonths, textViewTogetherDays, textViewMoodAdvice, textViewMoodName;
+    private ViewPager2 viewPagerMemories;
+    private MemoryAdapter memoryAdapter;
     private FirebaseFirestore firestore;
     private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         getLayoutInflater().inflate(R.layout.activity_main, findViewById(R.id.activity_content));
 
         imageViewProfile = findViewById(R.id.profileImage);
         notificationIcon = findViewById(R.id.notificationIcon);
-        selectedMoodImage = findViewById(R.id.selectedMoodImage);
         textViewGreeting = findViewById(R.id.textViewGreeting);
+        selectedMoodImage = findViewById(R.id.selectedMoodImage);
         textViewMoodAdvice = findViewById(R.id.textViewMoodAdvice);
         textViewMoodName = findViewById(R.id.textViewMoodName);
 
@@ -51,18 +63,20 @@ public class MainActivity extends BaseActivity {
         textViewTogetherMonths = togetherStatsView.findViewById(R.id.togetherMonths);
         textViewTogetherDays = togetherStatsView.findViewById(R.id.togetherDays);
 
+        viewPagerMemories = findViewById(R.id.viewPagerMemories);
+
         firestore = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
         loadMockData();
         fetchUserData();
+        initializeMoodTracking();
+        initializeMemoryCarousel();
 
         notificationIcon.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
             startActivity(intent);
         });
-
-        initializeMoodTracking();
     }
 
     @Override
@@ -184,6 +198,60 @@ public class MainActivity extends BaseActivity {
         }).addOnFailureListener(e -> {
             Toast.makeText(this, "Failed to log mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void autoScrollMemories() {
+        final Handler handler = new Handler();
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                int currentItem = viewPagerMemories.getCurrentItem();
+                int itemCount = memoryAdapter.getItemCount();
+                viewPagerMemories.setCurrentItem((currentItem + 1) % itemCount, true);
+                handler.postDelayed(this, 5000);
+            }
+        };
+        handler.postDelayed(runnable, 5000);
+    }
+
+    private void initializeMemoryCarousel() {
+        try {
+            InputStream is = getAssets().open("mock_memories.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+
+            String json = new String(buffer, "UTF-8");
+            JSONObject jsonObject = new JSONObject(json);
+            JSONArray memoryArray = jsonObject.getJSONArray("memories");
+
+            List<Memory> memories = new ArrayList<>();
+            for (int i = 0; i < memoryArray.length(); i++) {
+                JSONObject obj = memoryArray.getJSONObject(i);
+
+                memories.add(new Memory(
+                        obj.getString("memoryId"),
+                        obj.getString("memoryName"),
+                        obj.getString("date"),
+                        obj.getString("note"),
+                        obj.getString("imageUrl"),
+                        obj.optString("userId", "defaultUserId"),
+                        obj.optString("relationshipId", "defaultRelationshipId")
+                ));
+            }
+
+            memoryAdapter = new MemoryAdapter(memories, memory -> {
+
+            });
+
+            viewPagerMemories.setAdapter(memoryAdapter);
+            viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+            autoScrollMemories();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Error loading memories: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void hideKeyboard() {

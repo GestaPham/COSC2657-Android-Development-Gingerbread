@@ -23,6 +23,9 @@
             android:name=".Views.Calendar.CalendarActivity"
             android:exported="false" />
         <activity
+            android:name=".Views.Notification.NotificationActivity"
+            android:exported="false" />
+        <activity
             android:name=".Views.BottomNavigation.BaseActivity"
             android:exported="false" />
         <activity
