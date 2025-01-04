@@ -60,7 +60,8 @@ public class ProfileActivity extends BaseActivity {
         });
 
         buttonMyPartner.setOnClickListener(v -> {
-            // Logic to view or set up partner, accept, or deny
+            Intent intent = new Intent(ProfileActivity.this, PartnerProfileActivity.class);
+            startActivity(intent);
         });
 
         buttonSupport.setOnClickListener(v -> {

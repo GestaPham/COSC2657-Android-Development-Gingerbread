@@ -63,7 +63,8 @@ public class AuthenticationService {
                         location,
                         isPremium,
                         fcmToken,
-                        shareToken
+                        shareToken,
+                        ""
                 );
 
                 firestore.collection("users").document(userId).set(user).addOnCompleteListener(firestoreTask -> {
