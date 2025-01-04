@@ -143,55 +143,11 @@ public class MainActivity extends BaseActivity {
         textViewMoodAdvice.setVisibility(View.GONE);
         textViewMoodName.setVisibility(View.GONE);
 
-<<<<<<< HEAD
-        SharedPreferences prefs = getSharedPreferences("MoodPrefs", MODE_PRIVATE);
-        String lastMoodDate = prefs.getString("lastMoodDate", "");
-        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
-        if (moodSelectReset(lastMoodDate)) {
-            enableMoodSelection();
-            return;
-        }
-
-        fetchMoodLogForToday(currentDate);
-
-        String userId = auth.getCurrentUser().getUid();
-        firestore.collection("mood_logs")
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("date", currentDate)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (!querySnapshot.isEmpty()) {
-                        List<MoodLog> moodLogs = querySnapshot.toObjects(MoodLog.class);
-
-                        if (moodLogs.size() == 1) {
-                            MoodLog moodLog = moodLogs.get(0);
-                            showMoodUI(moodLog.getMood(), moodLog.getNotes());
-                        }
-
-                        if (moodLogs.size() >= 1) {
-                            findViewById(R.id.btnTrackMood).setVisibility(View.VISIBLE);
-                            findViewById(R.id.btnTrackMood).setOnClickListener(v -> {
-                                Intent intent = new Intent(MainActivity.this, MoodTrackingActivity.class);
-                                startActivity(intent);
-                            });
-                        } else {
-                            findViewById(R.id.btnTrackMood).setVisibility(View.GONE);
-                        }
-                    } else {
-                        enableMoodSelection();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Error checking mood logs: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-=======
         findViewById(R.id.moodBad).setOnClickListener(v -> updateMood("Bad", R.drawable.ic_mood_bad));
         findViewById(R.id.moodTired).setOnClickListener(v -> updateMood("Tired", R.drawable.ic_mood_tired));
         findViewById(R.id.moodOkay).setOnClickListener(v -> updateMood("Okay", R.drawable.ic_mood_okay));
         findViewById(R.id.moodHappy).setOnClickListener(v -> updateMood("Happy", R.drawable.ic_mood_happy));
         findViewById(R.id.moodExcited).setOnClickListener(v -> updateMood("Excited", R.drawable.ic_mood_excited));
->>>>>>> parent of 577738f (Reapply "add MoodTrackingActivity")
     }
 
     private void updateMood(String mood, int moodIcon) {
