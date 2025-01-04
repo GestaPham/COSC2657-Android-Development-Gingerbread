@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -22,12 +23,14 @@
 
         <TextView
             android:id="@+id/messageTextLeft"
-            android:layout_width="match_parent"
+            android:layout_width="338dp"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/chatProfileImgLeft"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="73dp"
             android:background="@drawable/message_background"
-            android:padding="20dp"
             android:ellipsize="end"
+            android:padding="20dp"
+            android:fontFamily=
             android:text="A very long message that spans multiple lines to test resizing of the layout dynamically." />
 
     </RelativeLayout>

@@ -1,4 +1,4 @@
-package com.gingerbread.asm3.Views.Message;
+package com.gingerbread.asm3.Adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
