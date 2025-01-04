@@ -59,7 +59,7 @@ public class PartnerProfileActivity extends BaseActivity {
 
     private void loadCurrentUser() {
         String userId = userService.getCurrentUserId();
-        Log.d("PartnerProfile", "loadCurrentUser: "+ userId);
+        Log.d("PartnerProfile", "loadCurrentUser: " + userId);
         if (userId != null) {
             userService.getUser(userId, new UserService.UserCallback() {
                 @Override
@@ -147,8 +147,21 @@ public class PartnerProfileActivity extends BaseActivity {
                     userService.getUser(pendingPartnerId, new UserService.UserCallback() {
                         @Override
                         public void onSuccess(Map<String, Object> partnerData) {
-                            String partnerEmail = partnerData.get("email") != null ? partnerData.get("email").toString() : "Unknown";
-                            displayPendingInvitation(partnerEmail);
+                            if (partnerData != null) {
+                                partnerUser = new User();
+                                partnerUser.setUserId(partnerData.get("userId").toString());
+                                partnerUser.setEmail(partnerData.get("email").toString());
+                                partnerUser.setName(partnerData.get("name") != null ? partnerData.get("name").toString() : "");
+                                partnerUser.setAge(partnerData.get("age") != null ? (int) ((long) partnerData.get("age")) : 0);
+                                partnerUser.setGender(partnerData.get("gender") != null ? partnerData.get("gender").toString() : "");
+                                partnerUser.setNationality(partnerData.get("nationality") != null ? partnerData.get("nationality").toString() : "");
+                                partnerUser.setReligion(partnerData.get("religion") != null ? partnerData.get("religion").toString() : "");
+                                partnerUser.setLocation(partnerData.get("location") != null ? partnerData.get("location").toString() : "");
+
+                                displayPendingInvitation(partnerUser.getEmail());
+                            } else {
+                                displayNoPartnerLinked();
+                            }
                         }
 
                         @Override
@@ -168,6 +181,7 @@ public class PartnerProfileActivity extends BaseActivity {
         });
     }
 
+
     private void displayPendingInvitation(String partnerEmail) {
         partnerTextViewName.setText(partnerEmail + " wants to link with you");
         editTextPartnerEmail.setVisibility(View.GONE);
@@ -180,13 +194,15 @@ public class PartnerProfileActivity extends BaseActivity {
     }
 
     private void linkPartner() {
-        String sharedToken = currentUser.getUserId() + "_" + partnerUser.getUserId();
-        String userId = userService.getCurrentUserId();
+        String userId = currentUser.getUserId();
+        String partnerId = partnerUser.getUserId();
 
-        userService.updateUser(currentUser.getUserId(), Map.of("shareToken", sharedToken, "pendingPartner", null), new UserService.UpdateCallback() {
+        String sharedToken = userId + "_" + partnerId;
+
+        userService.updateUser(userId, Map.of("shareToken", sharedToken, "pendingPartner", ""), new UserService.UpdateCallback() {
             @Override
             public void onSuccess() {
-                userService.updateUser(partnerUser.getUserId(), Map.of("shareToken", sharedToken, "pendingPartner", null), new UserService.UpdateCallback() {
+                userService.updateUser(partnerId, Map.of("shareToken", sharedToken, "pendingPartner", ""), new UserService.UpdateCallback() {
                     @Override
                     public void onSuccess() {
                         Toast.makeText(PartnerProfileActivity.this, "Partner linked successfully", Toast.LENGTH_SHORT).show();
@@ -208,7 +224,8 @@ public class PartnerProfileActivity extends BaseActivity {
     }
 
     private void denyPartner() {
-        userService.updateUser(currentUser.getUserId(), Map.of("pendingPartner", null), new UserService.UpdateCallback() {
+        String userId = currentUser.getUserId();
+        userService.updateUser(userId, Map.of("pendingPartner", ""), new UserService.UpdateCallback() {
             @Override
             public void onSuccess() {
                 Toast.makeText(PartnerProfileActivity.this, "Partner request denied", Toast.LENGTH_SHORT).show();
