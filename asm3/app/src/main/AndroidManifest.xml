@@ -17,6 +17,9 @@
         android:theme="@style/Theme.Asm"
         tools:targetApi="31">
         <activity
+            android:name=".Views.MoodTracker.MoodTrackerActivity"
+            android:exported="false" />
+        <activity
             android:name=".Views.Chatbot.ChatbotActivity"
             android:exported="false" />
         <activity
@@ -58,11 +61,14 @@
         <activity
             android:name=".Views.Home.MainActivity"
             android:exported="true">
-            <!--            <intent-filter>
+
+            <!--
+                            <intent-filter>
                             <action android:name="android.intent.action.MAIN" />
 
                             <category android:name="android.intent.category.LAUNCHER" />
-                        </intent-filter>-->
+                        </intent-filter>
+            -->
         </activity>
     </application>
 
