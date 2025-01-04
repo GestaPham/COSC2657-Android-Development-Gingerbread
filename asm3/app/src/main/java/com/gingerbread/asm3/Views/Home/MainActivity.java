@@ -164,6 +164,8 @@ public class MainActivity extends BaseActivity {
             return;
         }
 
+        fetchMoodLogForToday(currentDate);
+
         String userId = auth.getCurrentUser().getUid();
         firestore.collection("mood_logs")
                 .whereEqualTo("userId", userId)
@@ -178,7 +180,7 @@ public class MainActivity extends BaseActivity {
                             showMoodUI(moodLog.getMood(), moodLog.getNotes());
                         }
 
-                        if (moodLogs.size() >= 2) {
+                        if (moodLogs.size() >= 1) {
                             findViewById(R.id.btnTrackMood).setVisibility(View.VISIBLE);
                             findViewById(R.id.btnTrackMood).setOnClickListener(v -> {
                                 Intent intent = new Intent(MainActivity.this, MoodTrackingActivity.class);
