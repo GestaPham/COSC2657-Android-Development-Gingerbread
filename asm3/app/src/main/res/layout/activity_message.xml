@@ -37,12 +37,12 @@
             android:inputType="text"
             android:padding="12dp"
             android:textColor="@color/black"
-            app:layout_constraintEnd_toStartOf="@+id/submitButton"
+            app:layout_constraintEnd_toStartOf="@+id/sendMessageButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
-            android:id="@+id/submitButton"
+            android:id="@+id/sendMessageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/send_message_button"

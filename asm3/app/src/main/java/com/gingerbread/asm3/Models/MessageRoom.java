@@ -7,6 +7,7 @@ public class MessageRoom {
     private List<String> userIds;
     private String lastMessageSenderId;
     private String lastMessageTimeStamp;
+    private String lastMessageContent;
 
     public MessageRoom(String messageRoomId, List<String> userIds, String lastMessageSenderId, String lastMessageTimeStamp) {
         this.messageRoomId = messageRoomId;
@@ -48,5 +49,13 @@ public class MessageRoom {
 
     public void setLastMessageTimeStamp(String lastMessageTimeStamp) {
         this.lastMessageTimeStamp = lastMessageTimeStamp;
+    }
+
+    public String getLastMessageContent() {
+        return lastMessageContent;
+    }
+
+    public void setLastMessageContent(String lastMessageContent) {
+        this.lastMessageContent = lastMessageContent;
     }
 }
