@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +26,9 @@ public class PartnerProfileActivity extends BaseActivity {
     private TextView partnerTextViewAgeLabel, partnerTextViewGenderLabel, partnerTextViewNationalityLabel, partnerTextViewReligionLabel, partnerTextViewLocationLabel;
     private EditText editTextPartnerEmail;
     private Button buttonSendInvite, buttonAcceptInvite, buttonDenyInvite;
+    private ProgressBar progressBarLoading;
+    private ScrollView contentLayout;
+
     private User partnerUser;
     private UserService userService;
     private User currentUser;
@@ -53,11 +58,25 @@ public class PartnerProfileActivity extends BaseActivity {
         buttonAcceptInvite = findViewById(R.id.buttonAcceptInvite);
         buttonDenyInvite = findViewById(R.id.buttonDenyInvite);
 
+        progressBarLoading = findViewById(R.id.progressBarLoading);
+        contentLayout = findViewById(R.id.contentLayout);
+
         userService = new UserService();
         loadCurrentUser();
     }
 
+    private void showLoading() {
+        progressBarLoading.setVisibility(View.VISIBLE);
+        contentLayout.setVisibility(View.GONE);
+    }
+
+    private void hideLoading() {
+        progressBarLoading.setVisibility(View.GONE);
+        contentLayout.setVisibility(View.VISIBLE);
+    }
+
     private void loadCurrentUser() {
+        showLoading();
         String userId = userService.getCurrentUserId();
         Log.d("PartnerProfile", "loadCurrentUser: " + userId);
         if (userId != null) {
@@ -72,9 +91,12 @@ public class PartnerProfileActivity extends BaseActivity {
 
                 @Override
                 public void onFailure(String errorMessage) {
+                    hideLoading();
                     Toast.makeText(PartnerProfileActivity.this, "Error loading user: " + errorMessage, Toast.LENGTH_SHORT).show();
                 }
             });
+        } else {
+            hideLoading();
         }
     }
 
@@ -97,44 +119,34 @@ public class PartnerProfileActivity extends BaseActivity {
                         setProfileDetailsVisible(false);
                         checkForPendingInvite();
                     }
+                    hideLoading();
                 }
 
                 @Override
                 public void onFailure(String errorMessage) {
                     checkForPendingInvite();
+                    hideLoading();
                 }
             });
         } else {
             checkForPendingInvite();
+            hideLoading();
         }
     }
 
     private void setProfileDetailsVisible(boolean isVisible) {
-        if (!isVisible) {
-            partnerTextViewAgeLabel.setVisibility(View.GONE);
-            partnerTextViewGenderLabel.setVisibility(View.GONE);
-            partnerTextViewNationalityLabel.setVisibility(View.GONE);
-            partnerTextViewReligionLabel.setVisibility(View.GONE);
-            partnerTextViewLocationLabel.setVisibility(View.GONE);
+        int visibility = isVisible ? View.VISIBLE : View.GONE;
+        partnerTextViewAgeLabel.setVisibility(visibility);
+        partnerTextViewGenderLabel.setVisibility(visibility);
+        partnerTextViewNationalityLabel.setVisibility(visibility);
+        partnerTextViewReligionLabel.setVisibility(visibility);
+        partnerTextViewLocationLabel.setVisibility(visibility);
 
-            partnerTextViewAge.setVisibility(View.GONE);
-            partnerTextViewGender.setVisibility(View.GONE);
-            partnerTextViewNationality.setVisibility(View.GONE);
-            partnerTextViewReligion.setVisibility(View.GONE);
-            partnerTextViewLocation.setVisibility(View.GONE);
-        } else {
-            partnerTextViewAgeLabel.setVisibility(View.VISIBLE);
-            partnerTextViewGenderLabel.setVisibility(View.VISIBLE);
-            partnerTextViewNationalityLabel.setVisibility(View.VISIBLE);
-            partnerTextViewReligionLabel.setVisibility(View.VISIBLE);
-            partnerTextViewLocationLabel.setVisibility(View.VISIBLE);
-
-            partnerTextViewAge.setVisibility(View.VISIBLE);
-            partnerTextViewGender.setVisibility(View.VISIBLE);
-            partnerTextViewNationality.setVisibility(View.VISIBLE);
-            partnerTextViewReligion.setVisibility(View.VISIBLE);
-            partnerTextViewLocation.setVisibility(View.VISIBLE);
-        }
+        partnerTextViewAge.setVisibility(visibility);
+        partnerTextViewGender.setVisibility(visibility);
+        partnerTextViewNationality.setVisibility(visibility);
+        partnerTextViewReligion.setVisibility(visibility);
+        partnerTextViewLocation.setVisibility(visibility);
     }
 
     private void checkForPendingInvite() {
@@ -148,17 +160,8 @@ public class PartnerProfileActivity extends BaseActivity {
                         @Override
                         public void onSuccess(Map<String, Object> partnerData) {
                             if (partnerData != null) {
-                                partnerUser = new User();
-                                partnerUser.setUserId(partnerData.get("userId").toString());
-                                partnerUser.setEmail(partnerData.get("email").toString());
-                                partnerUser.setName(partnerData.get("name") != null ? partnerData.get("name").toString() : "");
-                                partnerUser.setAge(partnerData.get("age") != null ? (int) ((long) partnerData.get("age")) : 0);
-                                partnerUser.setGender(partnerData.get("gender") != null ? partnerData.get("gender").toString() : "");
-                                partnerUser.setNationality(partnerData.get("nationality") != null ? partnerData.get("nationality").toString() : "");
-                                partnerUser.setReligion(partnerData.get("religion") != null ? partnerData.get("religion").toString() : "");
-                                partnerUser.setLocation(partnerData.get("location") != null ? partnerData.get("location").toString() : "");
-
-                                displayPendingInvitation(partnerUser.getEmail());
+                                String partnerEmail = partnerData.get("email") != null ? partnerData.get("email").toString() : "Unknown";
+                                displayPendingInvitation(partnerEmail);
                             } else {
                                 displayNoPartnerLinked();
                             }
@@ -180,7 +183,6 @@ public class PartnerProfileActivity extends BaseActivity {
             }
         });
     }
-
 
     private void displayPendingInvitation(String partnerEmail) {
         partnerTextViewName.setText(partnerEmail + " wants to link with you");
@@ -256,11 +258,7 @@ public class PartnerProfileActivity extends BaseActivity {
 
     private void displayNoPartnerLinked() {
         partnerTextViewName.setText("No Partner Linked");
-        partnerTextViewAge.setVisibility(View.GONE);
-        partnerTextViewGender.setVisibility(View.GONE);
-        partnerTextViewNationality.setVisibility(View.GONE);
-        partnerTextViewReligion.setVisibility(View.GONE);
-        partnerTextViewLocation.setVisibility(View.GONE);
+        setProfileDetailsVisible(false);
         editTextPartnerEmail.setVisibility(View.VISIBLE);
         buttonSendInvite.setVisibility(View.VISIBLE);
         buttonAcceptInvite.setVisibility(View.GONE);
