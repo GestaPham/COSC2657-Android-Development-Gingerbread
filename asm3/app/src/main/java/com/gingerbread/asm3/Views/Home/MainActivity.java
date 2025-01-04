@@ -2,13 +2,11 @@ package com.gingerbread.asm3.Views.Home;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -23,7 +21,6 @@ import com.gingerbread.asm3.Models.MoodLog;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
-import com.gingerbread.asm3.Views.MoodTracking.MoodTrackingActivity;
 import com.gingerbread.asm3.Views.Notification.NotificationActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -34,7 +31,6 @@ import org.json.JSONObject;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -51,6 +47,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
 
         getLayoutInflater().inflate(R.layout.activity_main, findViewById(R.id.activity_content));
 
@@ -80,15 +77,6 @@ public class MainActivity extends BaseActivity {
             Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
             startActivity(intent);
         });
-
-        Button btnTrackMood = findViewById(R.id.btnTrackMood);
-
-        String lastMoodDate = getSharedPreferences("MoodPrefs", MODE_PRIVATE).getString("lastMoodDate", "");
-
-        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        if (!lastMoodDate.equals(currentDate)) {
-            btnTrackMood.setVisibility(View.GONE);
-        }
     }
 
     @Override
@@ -155,98 +143,14 @@ public class MainActivity extends BaseActivity {
         textViewMoodAdvice.setVisibility(View.GONE);
         textViewMoodName.setVisibility(View.GONE);
 
-        SharedPreferences prefs = getSharedPreferences("MoodPrefs", MODE_PRIVATE);
-        String lastMoodDate = prefs.getString("lastMoodDate", "");
-        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
-        if (moodSelectReset(lastMoodDate)) {
-            enableMoodSelection();
-            return;
-        }
-
-        String userId = auth.getCurrentUser().getUid();
-        firestore.collection("mood_logs")
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("date", currentDate)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (!querySnapshot.isEmpty()) {
-                        List<MoodLog> moodLogs = querySnapshot.toObjects(MoodLog.class);
-
-                        if (moodLogs.size() == 1) {
-                            MoodLog moodLog = moodLogs.get(0);
-                            showMoodUI(moodLog.getMood(), moodLog.getNotes());
-                        }
-
-                        if (moodLogs.size() >= 2) {
-                            findViewById(R.id.btnTrackMood).setVisibility(View.VISIBLE);
-                            findViewById(R.id.btnTrackMood).setOnClickListener(v -> {
-                                Intent intent = new Intent(MainActivity.this, MoodTrackingActivity.class);
-                                startActivity(intent);
-                            });
-                        } else {
-                            findViewById(R.id.btnTrackMood).setVisibility(View.GONE);
-                        }
-                    } else {
-                        enableMoodSelection();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Error checking mood logs: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+        findViewById(R.id.moodBad).setOnClickListener(v -> updateMood("Bad", R.drawable.ic_mood_bad));
+        findViewById(R.id.moodTired).setOnClickListener(v -> updateMood("Tired", R.drawable.ic_mood_tired));
+        findViewById(R.id.moodOkay).setOnClickListener(v -> updateMood("Okay", R.drawable.ic_mood_okay));
+        findViewById(R.id.moodHappy).setOnClickListener(v -> updateMood("Happy", R.drawable.ic_mood_happy));
+        findViewById(R.id.moodExcited).setOnClickListener(v -> updateMood("Excited", R.drawable.ic_mood_excited));
     }
 
-    private int getMoodIcon(String mood) {
-        switch (mood) {
-            case "Bad":
-                return R.drawable.ic_mood_bad;
-            case "Tired":
-                return R.drawable.ic_mood_tired;
-            case "Okay":
-                return R.drawable.ic_mood_okay;
-            case "Happy":
-                return R.drawable.ic_mood_happy;
-            case "Excited":
-                return R.drawable.ic_mood_excited;
-            default:
-                return R.drawable.ic_mood_okay;
-        }
-    }
-
-    private void showMoodUI(String mood, String advice) {
-        selectedMoodImage.setVisibility(View.VISIBLE);
-        textViewMoodName.setVisibility(View.VISIBLE);
-        textViewMoodAdvice.setVisibility(View.VISIBLE);
-
-        selectedMoodImage.setImageResource(getMoodIcon(mood));
-        textViewMoodName.setText(mood);
-        textViewMoodAdvice.setText(advice);
-
-        findViewById(R.id.moodOptionsContainer).setVisibility(View.GONE);
-        findViewById(R.id.btnTrackMood).setVisibility(View.VISIBLE);
-        findViewById(R.id.btnTrackMood).setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, MoodTrackingActivity.class);
-            startActivity(intent);
-        });
-    }
-
-    private void enableMoodSelection() {
-        findViewById(R.id.moodOptionsContainer).setVisibility(View.VISIBLE);
-        selectedMoodImage.setVisibility(View.GONE);
-        textViewMoodAdvice.setVisibility(View.GONE);
-        textViewMoodName.setVisibility(View.GONE);
-
-        Button btnTrackMood = findViewById(R.id.btnTrackMood);
-        btnTrackMood.setVisibility(View.GONE);
-
-        findViewById(R.id.moodBad).setOnClickListener(v -> updateMood("Bad", R.drawable.ic_mood_bad, btnTrackMood));
-        findViewById(R.id.moodTired).setOnClickListener(v -> updateMood("Tired", R.drawable.ic_mood_tired, btnTrackMood));
-        findViewById(R.id.moodOkay).setOnClickListener(v -> updateMood("Okay", R.drawable.ic_mood_okay, btnTrackMood));
-        findViewById(R.id.moodHappy).setOnClickListener(v -> updateMood("Happy", R.drawable.ic_mood_happy, btnTrackMood));
-        findViewById(R.id.moodExcited).setOnClickListener(v -> updateMood("Excited", R.drawable.ic_mood_excited, btnTrackMood));
-    }
-
-    private void updateMood(String mood, int moodIcon, Button btnTrackMood) {
+    private void updateMood(String mood, int moodIcon) {
         try {
             InputStream is = getAssets().open("mock_mood_advice.json");
             int size = is.available();
@@ -259,15 +163,11 @@ public class MainActivity extends BaseActivity {
             JSONObject moodsObject = jsonObject.getJSONObject("moods");
             String advice = moodsObject.getString(mood);
 
-            SharedPreferences.Editor editor = getSharedPreferences("MoodPrefs", MODE_PRIVATE).edit();
-            editor.putString("mood", mood);
-            editor.putString("advice", advice);
-            editor.putString("lastMoodDate", new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
-            editor.apply();
-
+            // Update mood display
             selectedMoodImage.setVisibility(View.VISIBLE);
             textViewMoodName.setVisibility(View.VISIBLE);
             textViewMoodAdvice.setVisibility(View.VISIBLE);
+
             selectedMoodImage.setImageResource(moodIcon);
             textViewMoodName.setText(mood);
             textViewMoodAdvice.setText(advice);
@@ -276,74 +176,21 @@ public class MainActivity extends BaseActivity {
 
             saveMoodLog(mood, advice);
 
-            btnTrackMood.setVisibility(View.VISIBLE);
-            btnTrackMood.setOnClickListener(v -> {
-                Intent intent = new Intent(MainActivity.this, MoodTrackingActivity.class);
-                startActivity(intent);
-            });
         } catch (Exception e) {
             Toast.makeText(this, "Error loading mood advice: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
-    private boolean moodSelectReset(String lastDate) {
-        try {
-            if (lastDate.isEmpty()) {
-                return true;
-            }
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            Date lastMoodDate = dateFormat.parse(lastDate);
-            Calendar lastCalendar = Calendar.getInstance();
-            lastCalendar.setTime(lastMoodDate);
-
-            Calendar currentCalendar = Calendar.getInstance();
-
-            if (currentCalendar.get(Calendar.DAY_OF_YEAR) > lastCalendar.get(Calendar.DAY_OF_YEAR)) {
-                // Check if it's past 6 AM
-                int currentHour = currentCalendar.get(Calendar.HOUR_OF_DAY);
-                return currentHour >= 6;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    private void fetchMoodLogForToday(String currentDate) {
-        String userId = auth.getCurrentUser().getUid();
-
-        firestore.collection("mood_logs")
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("date", currentDate)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (!querySnapshot.isEmpty()) {
-                        MoodLog moodLog = querySnapshot.getDocuments().get(0).toObject(MoodLog.class);
-                        if (moodLog != null) {
-                            showMoodUI(moodLog.getMood(), moodLog.getNotes());
-                        }
-                    } else {
-                        Toast.makeText(this, "No mood log found for today.", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Error fetching mood log: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-    }
-
-
     private void saveMoodLog(String mood, String advice) {
         String userId = auth.getCurrentUser().getUid();
-        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         String notes = advice;
 
-        MoodLog moodLog = new MoodLog(null, userId, currentDate, mood, notes);
+        MoodLog moodLog = new MoodLog(null, userId, date, mood, notes);
 
         firestore.collection("mood_logs").add(moodLog).addOnSuccessListener(documentReference -> {
             String generatedLogId = documentReference.getId();
             documentReference.update("logId", generatedLogId).addOnSuccessListener(aVoid -> {
-                saveLastMoodDate(currentDate);
                 Toast.makeText(this, "Mood logged successfully with ID: " + generatedLogId, Toast.LENGTH_SHORT).show();
             }).addOnFailureListener(e -> {
                 Toast.makeText(this, "Failed to update logId: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -351,12 +198,6 @@ public class MainActivity extends BaseActivity {
         }).addOnFailureListener(e -> {
             Toast.makeText(this, "Failed to log mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
-    }
-
-    private void saveLastMoodDate(String date) {
-        SharedPreferences.Editor editor = getSharedPreferences("MoodPrefs", MODE_PRIVATE).edit();
-        editor.putString("lastMoodDate", date);
-        editor.apply();
     }
 
     private void autoScrollMemories() {
@@ -389,7 +230,15 @@ public class MainActivity extends BaseActivity {
             for (int i = 0; i < memoryArray.length(); i++) {
                 JSONObject obj = memoryArray.getJSONObject(i);
 
-                memories.add(new Memory(obj.getString("memoryId"), obj.getString("memoryName"), obj.getString("date"), obj.getString("note"), obj.getString("imageUrl"), obj.optString("userId", "defaultUserId"), obj.optString("relationshipId", "defaultRelationshipId")));
+                memories.add(new Memory(
+                        obj.getString("memoryId"),
+                        obj.getString("memoryName"),
+                        obj.getString("date"),
+                        obj.getString("note"),
+                        obj.getString("imageUrl"),
+                        obj.optString("userId", "defaultUserId"),
+                        obj.optString("relationshipId", "defaultRelationshipId")
+                ));
             }
 
             memoryAdapter = new MemoryAdapter(memories, memory -> {
