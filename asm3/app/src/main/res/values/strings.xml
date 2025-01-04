@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">♡SinceWhen</string>
+
+    <string-array name="timeframe_options">
+        <item>Daily</item>
+        <item>Weekly</item>
+        <item>Monthly</item>
+    </string-array>
 </resources>
