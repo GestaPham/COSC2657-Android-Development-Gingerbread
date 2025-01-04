@@ -1,26 +1,300 @@
 package com.gingerbread.asm3.Views.Profile;
 
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-
+import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.UserService;
+import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 
-public class PartnerProfileActivity extends AppCompatActivity {
+import java.util.Map;
+
+public class PartnerProfileActivity extends BaseActivity {
+
+    private ImageView partnerProfileImageView;
+    private TextView partnerTextViewName, partnerTextViewAge, partnerTextViewGender, partnerTextViewNationality, partnerTextViewReligion, partnerTextViewLocation;
+    private TextView partnerTextViewAgeLabel, partnerTextViewGenderLabel, partnerTextViewNationalityLabel, partnerTextViewReligionLabel, partnerTextViewLocationLabel;
+    private EditText editTextPartnerEmail;
+    private Button buttonSendInvite, buttonAcceptInvite, buttonDenyInvite;
+    private User partnerUser;
+    private UserService userService;
+    private User currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_partner_profile);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+        getLayoutInflater().inflate(R.layout.activity_partner_profile, findViewById(R.id.activity_content));
+
+        partnerProfileImageView = findViewById(R.id.partnerProfileImageView);
+        partnerTextViewName = findViewById(R.id.partnerTextViewName);
+
+        partnerTextViewAgeLabel = findViewById(R.id.partnerTextViewAgeLabel);
+        partnerTextViewGenderLabel = findViewById(R.id.partnerTextViewGenderLabel);
+        partnerTextViewNationalityLabel = findViewById(R.id.partnerTextViewNationalityLabel);
+        partnerTextViewReligionLabel = findViewById(R.id.partnerTextViewReligionLabel);
+        partnerTextViewLocationLabel = findViewById(R.id.partnerTextViewLocationLabel);
+
+        partnerTextViewAge = findViewById(R.id.partnerTextViewAge);
+        partnerTextViewGender = findViewById(R.id.partnerTextViewGender);
+        partnerTextViewNationality = findViewById(R.id.partnerTextViewNationality);
+        partnerTextViewReligion = findViewById(R.id.partnerTextViewReligion);
+        partnerTextViewLocation = findViewById(R.id.partnerTextViewLocation);
+
+        editTextPartnerEmail = findViewById(R.id.editTextPartnerEmail);
+        buttonSendInvite = findViewById(R.id.buttonSendInvite);
+        buttonAcceptInvite = findViewById(R.id.buttonAcceptInvite);
+        buttonDenyInvite = findViewById(R.id.buttonDenyInvite);
+
+        userService = new UserService();
+        loadCurrentUser();
+    }
+
+    private void loadCurrentUser() {
+        String userId = userService.getCurrentUserId();
+        Log.d("PartnerProfile", "loadCurrentUser: "+ userId);
+        if (userId != null) {
+            userService.getUser(userId, new UserService.UserCallback() {
+                @Override
+                public void onSuccess(Map<String, Object> userData) {
+                    currentUser = new User();
+                    currentUser.setUserId(userId);
+                    currentUser.setShareToken(userData.get("shareToken") != null ? userData.get("shareToken").toString() : null);
+                    loadPartnerProfile();
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                    Toast.makeText(PartnerProfileActivity.this, "Error loading user: " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    private void loadPartnerProfile() {
+        if (currentUser.getShareToken() != null) {
+            userService.getPartnerByUserId(currentUser.getUserId(), new UserService.UserCallback() {
+                @Override
+                public void onSuccess(Map<String, Object> partnerData) {
+                    if (partnerData != null) {
+                        partnerUser = new User();
+                        partnerUser.setName(partnerData.get("name") != null ? partnerData.get("name").toString() : "N/A");
+                        partnerUser.setAge(partnerData.get("age") != null ? (int) ((long) partnerData.get("age")) : 0);
+                        partnerUser.setGender(partnerData.get("gender") != null ? partnerData.get("gender").toString() : "N/A");
+                        partnerUser.setNationality(partnerData.get("nationality") != null ? partnerData.get("nationality").toString() : "N/A");
+                        partnerUser.setReligion(partnerData.get("religion") != null ? partnerData.get("religion").toString() : "N/A");
+                        partnerUser.setLocation(partnerData.get("location") != null ? partnerData.get("location").toString() : "N/A");
+
+                        displayPartnerProfile();
+                    } else {
+                        setProfileDetailsVisible(false);
+                        checkForPendingInvite();
+                    }
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                    checkForPendingInvite();
+                }
+            });
+        } else {
+            checkForPendingInvite();
+        }
+    }
+
+    private void setProfileDetailsVisible(boolean isVisible) {
+        if (!isVisible) {
+            partnerTextViewAgeLabel.setVisibility(View.GONE);
+            partnerTextViewGenderLabel.setVisibility(View.GONE);
+            partnerTextViewNationalityLabel.setVisibility(View.GONE);
+            partnerTextViewReligionLabel.setVisibility(View.GONE);
+            partnerTextViewLocationLabel.setVisibility(View.GONE);
+
+            partnerTextViewAge.setVisibility(View.GONE);
+            partnerTextViewGender.setVisibility(View.GONE);
+            partnerTextViewNationality.setVisibility(View.GONE);
+            partnerTextViewReligion.setVisibility(View.GONE);
+            partnerTextViewLocation.setVisibility(View.GONE);
+        } else {
+            partnerTextViewAgeLabel.setVisibility(View.VISIBLE);
+            partnerTextViewGenderLabel.setVisibility(View.VISIBLE);
+            partnerTextViewNationalityLabel.setVisibility(View.VISIBLE);
+            partnerTextViewReligionLabel.setVisibility(View.VISIBLE);
+            partnerTextViewLocationLabel.setVisibility(View.VISIBLE);
+
+            partnerTextViewAge.setVisibility(View.VISIBLE);
+            partnerTextViewGender.setVisibility(View.VISIBLE);
+            partnerTextViewNationality.setVisibility(View.VISIBLE);
+            partnerTextViewReligion.setVisibility(View.VISIBLE);
+            partnerTextViewLocation.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void checkForPendingInvite() {
+        userService.getUser(currentUser.getUserId(), new UserService.UserCallback() {
+            @Override
+            public void onSuccess(Map<String, Object> userData) {
+                String pendingPartnerId = userData.get("pendingPartner") != null ? userData.get("pendingPartner").toString() : null;
+
+                if (!TextUtils.isEmpty(pendingPartnerId)) {
+                    userService.getUser(pendingPartnerId, new UserService.UserCallback() {
+                        @Override
+                        public void onSuccess(Map<String, Object> partnerData) {
+                            String partnerEmail = partnerData.get("email") != null ? partnerData.get("email").toString() : "Unknown";
+                            displayPendingInvitation(partnerEmail);
+                        }
+
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            displayNoPartnerLinked();
+                        }
+                    });
+                } else {
+                    displayNoPartnerLinked();
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                displayNoPartnerLinked();
+            }
         });
+    }
+
+    private void displayPendingInvitation(String partnerEmail) {
+        partnerTextViewName.setText(partnerEmail + " wants to link with you");
+        editTextPartnerEmail.setVisibility(View.GONE);
+        buttonSendInvite.setVisibility(View.GONE);
+        buttonAcceptInvite.setVisibility(View.VISIBLE);
+        buttonDenyInvite.setVisibility(View.VISIBLE);
+
+        buttonAcceptInvite.setOnClickListener(v -> linkPartner());
+        buttonDenyInvite.setOnClickListener(v -> denyPartner());
+    }
+
+    private void linkPartner() {
+        String sharedToken = currentUser.getUserId() + "_" + partnerUser.getUserId();
+        String userId = userService.getCurrentUserId();
+
+        userService.updateUser(currentUser.getUserId(), Map.of("shareToken", sharedToken, "pendingPartner", null), new UserService.UpdateCallback() {
+            @Override
+            public void onSuccess() {
+                userService.updateUser(partnerUser.getUserId(), Map.of("shareToken", sharedToken, "pendingPartner", null), new UserService.UpdateCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(PartnerProfileActivity.this, "Partner linked successfully", Toast.LENGTH_SHORT).show();
+                        loadPartnerProfile();
+                    }
+
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        Toast.makeText(PartnerProfileActivity.this, "Error linking partner: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(PartnerProfileActivity.this, "Error linking partner: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void denyPartner() {
+        userService.updateUser(currentUser.getUserId(), Map.of("pendingPartner", null), new UserService.UpdateCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(PartnerProfileActivity.this, "Partner request denied", Toast.LENGTH_SHORT).show();
+                displayNoPartnerLinked();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(PartnerProfileActivity.this, "Error denying partner request: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void displayPartnerProfile() {
+        partnerTextViewName.setText(partnerUser.getName() != null ? partnerUser.getName() : "N/A");
+        partnerTextViewAge.setText(partnerUser.getAge() > 0 ? String.valueOf(partnerUser.getAge()) : "N/A");
+        partnerTextViewGender.setText(partnerUser.getGender() != null ? partnerUser.getGender() : "N/A");
+        partnerTextViewNationality.setText(partnerUser.getNationality() != null ? partnerUser.getNationality() : "N/A");
+        partnerTextViewReligion.setText(partnerUser.getReligion() != null ? partnerUser.getReligion() : "N/A");
+        partnerTextViewLocation.setText(partnerUser.getLocation() != null ? partnerUser.getLocation() : "N/A");
+        setProfileDetailsVisible(true);
+
+        editTextPartnerEmail.setVisibility(View.GONE);
+        buttonSendInvite.setVisibility(View.GONE);
+        buttonAcceptInvite.setVisibility(View.GONE);
+        buttonDenyInvite.setVisibility(View.GONE);
+    }
+
+    private void displayNoPartnerLinked() {
+        partnerTextViewName.setText("No Partner Linked");
+        partnerTextViewAge.setVisibility(View.GONE);
+        partnerTextViewGender.setVisibility(View.GONE);
+        partnerTextViewNationality.setVisibility(View.GONE);
+        partnerTextViewReligion.setVisibility(View.GONE);
+        partnerTextViewLocation.setVisibility(View.GONE);
+        editTextPartnerEmail.setVisibility(View.VISIBLE);
+        buttonSendInvite.setVisibility(View.VISIBLE);
+        buttonAcceptInvite.setVisibility(View.GONE);
+        buttonDenyInvite.setVisibility(View.GONE);
+
+        buttonSendInvite.setOnClickListener(v -> sendInvite());
+    }
+
+    private void sendInvite() {
+        String partnerEmail = editTextPartnerEmail.getText().toString().trim();
+        if (TextUtils.isEmpty(partnerEmail)) {
+            Toast.makeText(this, "Please enter a valid email", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        userService.findUserByEmail(partnerEmail, new UserService.UserCallback() {
+            @Override
+            public void onSuccess(Map<String, Object> partnerData) {
+                if (partnerData != null) {
+                    String partnerId = partnerData.get("userId").toString();
+                    userService.updateUser(partnerId, Map.of("pendingPartner", currentUser.getUserId()), new UserService.UpdateCallback() {
+                        @Override
+                        public void onSuccess() {
+                            Toast.makeText(PartnerProfileActivity.this, "Invitation sent", Toast.LENGTH_SHORT).show();
+                            displayNoPartnerLinked();
+                        }
+
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            Toast.makeText(PartnerProfileActivity.this, "Failed to send invite: " + errorMessage, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    Toast.makeText(PartnerProfileActivity.this, "User not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(PartnerProfileActivity.this, "Error finding user: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.activity_base;
+    }
+
+    @Override
+    protected int getSelectedMenuItemId() {
+        return R.id.nav_profile;
     }
 }

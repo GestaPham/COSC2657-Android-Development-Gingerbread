@@ -3,6 +3,7 @@ package com.gingerbread.asm3.Services;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,24 @@ public class UserService {
                 callback.onFailure(task.getException() != null
                         ? task.getException().getMessage()
                         : "User not found");
+            }
+        });
+    }
+
+    public void findUserByEmail(String email, UserCallback callback) {
+        usersCollection.whereEqualTo("email", email).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Map<String, Object> userData = new HashMap<>(document.getData());
+                    userData.put("userId", document.getId());
+                    callback.onSuccess(userData);
+                    return;
+                }
+                callback.onFailure("User not found with the provided email.");
+            } else {
+                callback.onFailure(task.getException() != null
+                        ? task.getException().getMessage()
+                        : "Failed to find user by email.");
             }
         });
     }
@@ -52,29 +71,38 @@ public class UserService {
         });
     }
 
-    public void findUserByShareToken(String shareToken, UserCallback callback) {
-        usersCollection.whereEqualTo("shareToken", shareToken).get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
-                        callback.onSuccess(task.getResult().getDocuments().get(0).getData());
+    public void getPartnerByUserId(String userId, UserCallback callback) {
+        usersCollection.document(userId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                String shareToken = task.getResult().getString("shareToken");
+                if (shareToken == null || shareToken.isEmpty()) {
+                    callback.onSuccess(null);
+                    return;
+                }
+
+                usersCollection.whereEqualTo("shareToken", shareToken).get().addOnCompleteListener(queryTask -> {
+                    if (queryTask.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : queryTask.getResult()) {
+                            if (!document.getId().equals(userId)) {
+                                Map<String, Object> partnerData = new HashMap<>(document.getData());
+                                partnerData.put("userId", document.getId());
+                                callback.onSuccess(partnerData);
+                                return;
+                            }
+                        }
+                        callback.onSuccess(null);
                     } else {
-                        callback.onFailure("Invalid shareToken or user not found");
+                        callback.onFailure(queryTask.getException() != null
+                                ? queryTask.getException().getMessage()
+                                : "Failed to fetch partner");
                     }
                 });
-    }
-
-    public void linkUsers(String userId, String partnerUserId, UpdateCallback callback) {
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("linkedUserId", partnerUserId);
-
-        usersCollection.document(userId).update(updates)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        callback.onSuccess();
-                    } else {
-                        callback.onFailure("Failed to link users");
-                    }
-                });
+            } else {
+                callback.onFailure(task.getException() != null
+                        ? task.getException().getMessage()
+                        : "Failed to fetch user data");
+            }
+        });
     }
 
     public String getCurrentUserId() {
