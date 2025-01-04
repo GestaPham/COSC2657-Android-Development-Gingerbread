@@ -1,4 +1,4 @@
-package com.gingerbread.asm3.Views.CalendarActivity;
+package com.gingerbread.asm3.Views.Calendar;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 
 public class CalendarActivity extends BaseActivity {
 
