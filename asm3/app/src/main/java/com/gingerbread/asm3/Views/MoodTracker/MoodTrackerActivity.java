@@ -44,7 +44,6 @@ public class MoodTrackerActivity extends AppCompatActivity {
         firestore = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
-        // Initialize UI components
         moodImageView = findViewById(R.id.moodImageView);
         moodTextView = findViewById(R.id.moodTextView);
         dateTextView = findViewById(R.id.dateTextView);

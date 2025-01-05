@@ -2,6 +2,7 @@ package com.gingerbread.asm3.Views.Profile;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -43,6 +44,9 @@ public class ProfileDetailsActivity extends BaseActivity {
 
         user = (User) getIntent().getSerializableExtra("user");
         loadProfileDetails();
+
+        ImageButton buttonBack = findViewById(R.id.buttonBack);
+        buttonBack.setOnClickListener(v -> onBackPressed());
 
         textViewEditProfile.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileDetailsActivity.this, EditProfileActivity.class);

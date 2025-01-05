@@ -13,6 +13,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -22,16 +23,17 @@
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Back"
+                android:padding="12dp"
                 android:src="@drawable/ic_arrow_back" />
 
             <TextView
-                android:id="@+id/textViewRegisterTitle"
+                android:id="@+id/MoodTrackerTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="Mood Tracker"
                 android:textColor="@color/light_blue"
-                android:textSize="28sp"
+                android:textSize="24dp"
                 android:textStyle="bold" />
         </LinearLayout>
 
