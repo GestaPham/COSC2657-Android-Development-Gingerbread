@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -43,6 +44,9 @@ public class EditProfileActivity extends BaseActivity {
 
         user = (User) getIntent().getSerializableExtra("user");
         loadProfileDetails();
+
+        ImageButton buttonBack = findViewById(R.id.buttonBack);
+        buttonBack.setOnClickListener(v -> onBackPressed());
 
         buttonSave.setOnClickListener(v -> saveProfileDetails());
         buttonCancel.setOnClickListener(v -> finish());

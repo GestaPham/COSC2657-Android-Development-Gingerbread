@@ -39,7 +39,7 @@
                 android:layout_marginStart="8dp"
                 android:text="Register"
                 android:textColor="@color/light_blue"
-                android:textSize="28sp"
+                android:textSize="24dp"
                 android:textStyle="bold" />
         </LinearLayout>
 

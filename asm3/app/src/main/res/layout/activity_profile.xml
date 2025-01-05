@@ -2,7 +2,9 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/light_background"
+    android:clipToPadding="false"
+    android:paddingBottom="56dp"
     android:padding="16dp">
 
     <LinearLayout
@@ -15,29 +17,34 @@
             android:id="@+id/profileImageView"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/placeholder_profile_image"
-            android:contentDescription="Profile Image"
-            android:scaleType="centerCrop" />
+            android:layout_margin="16dp"
+            android:background="@drawable/ic_circle"
+            android:clipToOutline="true"
+            android:contentDescription="Profile Picture"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_placeholder"
+            android:elevation="4dp"
+            />
 
         <TextView
             android:id="@+id/textViewName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=""
-            android:textColor="@color/light_blue"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textColor="@color/text_dark"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center" />
 
         <TextView
             android:id="@+id/textViewPremiumStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Premium"
-            android:textColor="@color/light_red"
+            android:textColor="@color/light_green"
             android:textSize="14sp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:gravity="center" />
 
         <Button
             android:id="@+id/buttonMyPartner"
@@ -47,25 +54,28 @@
             android:layout_marginBottom="16dp"
             android:backgroundTint="@color/light_pink"
             android:text="My Partner"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/buttonProfileDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:backgroundTint="@color/light_pink"
+            android:backgroundTint="@color/light_blue"
             android:text="Profile Details"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/buttonSupport"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:backgroundTint="@color/light_pink"
+            android:backgroundTint="@color/orange"
             android:text="Support"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/buttonLogout"
@@ -74,6 +84,7 @@
             android:layout_marginTop="16dp"
             android:backgroundTint="@color/light_red"
             android:text="Log out"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
     </LinearLayout>
 </ScrollView>

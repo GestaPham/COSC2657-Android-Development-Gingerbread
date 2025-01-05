@@ -1,17 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme -->
     <style name="Base.Theme.Asm" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here -->
+        <!-- Light Theme -->
         <item name="colorPrimary">#F6D5D6</item> <!-- Soft pink -->
         <item name="colorPrimaryVariant">#FBE2E3</item> <!-- Lighter pink -->
         <item name="colorSecondary">#FCEDEB</item> <!-- Subtle peach -->
         <item name="colorOnPrimary">#FFFFFF</item> <!-- White text/icons -->
         <item name="colorSurface">#FFFFFF</item> <!-- White surfaces -->
         <item name="colorOnSurface">#333333</item> <!-- Dark text/icons -->
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@android:color/black</item> <!-- Black status bar -->
+        <item name="android:windowLightStatusBar">false</item> <!-- White icons on status bar -->
+
+        <!-- Bottom navigation -->
         <item name="bottomNavigationStyle">@style/CustomBottomNavigation</item>
     </style>
-
-    <style name="Theme.Asm" parent="Base.Theme.Asm" />
 
     <style name="CustomBottomNavigation" parent="Widget.MaterialComponents.BottomNavigationView">
         <item name="backgroundTint">#FFFFFF</item> <!-- White background for bottom navigation -->

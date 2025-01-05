@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -21,9 +22,11 @@ import com.gingerbread.asm3.Models.MoodLog;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
+import com.gingerbread.asm3.Views.MoodTracker.MoodTrackerActivity;
 import com.gingerbread.asm3.Views.Notification.NotificationActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,6 +34,7 @@ import org.json.JSONObject;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -47,7 +51,6 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
 
         getLayoutInflater().inflate(R.layout.activity_main, findViewById(R.id.activity_content));
 
@@ -77,6 +80,13 @@ public class MainActivity extends BaseActivity {
             Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
             startActivity(intent);
         });
+
+        Button moodTrackerButton = findViewById(R.id.moodTrackerButton);
+        moodTrackerButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, MoodTrackerActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     @Override
@@ -139,9 +149,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void initializeMoodTracking() {
-        selectedMoodImage.setVisibility(View.GONE);
-        textViewMoodAdvice.setVisibility(View.GONE);
-        textViewMoodName.setVisibility(View.GONE);
+        fetchLatestMoodLog();
 
         findViewById(R.id.moodBad).setOnClickListener(v -> updateMood("Bad", R.drawable.ic_mood_bad));
         findViewById(R.id.moodTired).setOnClickListener(v -> updateMood("Tired", R.drawable.ic_mood_tired));
@@ -149,6 +157,72 @@ public class MainActivity extends BaseActivity {
         findViewById(R.id.moodHappy).setOnClickListener(v -> updateMood("Happy", R.drawable.ic_mood_happy));
         findViewById(R.id.moodExcited).setOnClickListener(v -> updateMood("Excited", R.drawable.ic_mood_excited));
     }
+
+    private void fetchLatestMoodLog() {
+        String userId = auth.getCurrentUser().getUid();
+
+        firestore.collection("mood_logs").whereEqualTo("userId", userId).orderBy("date", Query.Direction.DESCENDING).limit(1).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            if (!queryDocumentSnapshots.isEmpty()) {
+                MoodLog latestMoodLog = queryDocumentSnapshots.toObjects(MoodLog.class).get(0);
+
+                // Check if the mood was logged for today or reset at 6 AM
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                String lastLoggedDate = latestMoodLog.getDate();
+
+                Calendar calendar = Calendar.getInstance();
+                Calendar resetCalendar = Calendar.getInstance();
+                resetCalendar.set(Calendar.HOUR_OF_DAY, 6);
+                resetCalendar.set(Calendar.MINUTE, 0);
+                resetCalendar.set(Calendar.SECOND, 0);
+
+                Date now = calendar.getTime();
+                Date resetTime = resetCalendar.getTime();
+
+                try {
+                    Date lastLogDate = dateFormat.parse(lastLoggedDate);
+                    if (now.after(resetTime) && (lastLogDate.before(resetTime) || !isSameDay(lastLogDate, now))) {
+                        enableMoodSelection();
+                    } else {
+                        disableMoodSelection(latestMoodLog);
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(this, "Failed to parse date: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                enableMoodSelection();
+            }
+        }).addOnFailureListener(e -> {
+            Toast.makeText(this, "Failed to fetch mood log: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private boolean isSameDay(Date date1, Date date2) {
+        Calendar cal1 = Calendar.getInstance();
+        Calendar cal2 = Calendar.getInstance();
+        cal1.setTime(date1);
+        cal2.setTime(date2);
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) && cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
+    }
+
+    private void enableMoodSelection() {
+        findViewById(R.id.moodOptionsContainer).setVisibility(View.VISIBLE);
+        selectedMoodImage.setVisibility(View.GONE);
+        textViewMoodName.setVisibility(View.GONE);
+        textViewMoodAdvice.setVisibility(View.GONE);
+    }
+
+    private void disableMoodSelection(MoodLog latestMoodLog) {
+        findViewById(R.id.moodOptionsContainer).setVisibility(View.GONE);
+
+        selectedMoodImage.setVisibility(View.VISIBLE);
+        textViewMoodName.setVisibility(View.VISIBLE);
+        textViewMoodAdvice.setVisibility(View.VISIBLE);
+
+        selectedMoodImage.setImageResource(getMoodIcon(latestMoodLog.getMood()));
+        textViewMoodName.setText(latestMoodLog.getMood());
+        textViewMoodAdvice.setText(latestMoodLog.getNotes());
+    }
+
 
     private void updateMood(String mood, int moodIcon) {
         try {
@@ -163,7 +237,6 @@ public class MainActivity extends BaseActivity {
             JSONObject moodsObject = jsonObject.getJSONObject("moods");
             String advice = moodsObject.getString(mood);
 
-            // Update mood display
             selectedMoodImage.setVisibility(View.VISIBLE);
             textViewMoodName.setVisibility(View.VISIBLE);
             textViewMoodAdvice.setVisibility(View.VISIBLE);
@@ -184,14 +257,14 @@ public class MainActivity extends BaseActivity {
     private void saveMoodLog(String mood, String advice) {
         String userId = auth.getCurrentUser().getUid();
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-        String notes = advice;
 
-        MoodLog moodLog = new MoodLog(null, userId, date, mood, notes);
+        MoodLog moodLog = new MoodLog(null, userId, date, mood, advice);
 
         firestore.collection("mood_logs").add(moodLog).addOnSuccessListener(documentReference -> {
             String generatedLogId = documentReference.getId();
             documentReference.update("logId", generatedLogId).addOnSuccessListener(aVoid -> {
-                Toast.makeText(this, "Mood logged successfully with ID: " + generatedLogId, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Mood logged successfully", Toast.LENGTH_SHORT).show();
+                disableMoodSelection(moodLog);
             }).addOnFailureListener(e -> {
                 Toast.makeText(this, "Failed to update logId: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
@@ -199,6 +272,7 @@ public class MainActivity extends BaseActivity {
             Toast.makeText(this, "Failed to log mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
+
 
     private void autoScrollMemories() {
         final Handler handler = new Handler();
@@ -230,15 +304,7 @@ public class MainActivity extends BaseActivity {
             for (int i = 0; i < memoryArray.length(); i++) {
                 JSONObject obj = memoryArray.getJSONObject(i);
 
-                memories.add(new Memory(
-                        obj.getString("memoryId"),
-                        obj.getString("memoryName"),
-                        obj.getString("date"),
-                        obj.getString("note"),
-                        obj.getString("imageUrl"),
-                        obj.optString("userId", "defaultUserId"),
-                        obj.optString("relationshipId", "defaultRelationshipId")
-                ));
+                memories.add(new Memory(obj.getString("memoryId"), obj.getString("memoryName"), obj.getString("date"), obj.getString("note"), obj.getString("imageUrl"), obj.optString("userId", "defaultUserId"), obj.optString("relationshipId", "defaultRelationshipId")));
             }
 
             memoryAdapter = new MemoryAdapter(memories, memory -> {
@@ -253,6 +319,24 @@ public class MainActivity extends BaseActivity {
             Toast.makeText(this, "Error loading memories: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
+
+    private int getMoodIcon(String mood) {
+        switch (mood) {
+            case "Excited":
+                return R.drawable.ic_mood_excited;
+            case "Happy":
+                return R.drawable.ic_mood_happy;
+            case "Okay":
+                return R.drawable.ic_mood_okay;
+            case "Tired":
+                return R.drawable.ic_mood_tired;
+            case "Bad":
+                return R.drawable.ic_mood_bad;
+            default:
+                return R.drawable.ic_circle;
+        }
+    }
+
 
     private void hideKeyboard() {
         View view = this.getCurrentFocus();
