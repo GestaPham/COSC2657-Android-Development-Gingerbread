@@ -5,6 +5,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.gingerbread.asm3.Models.Message;
@@ -23,6 +24,7 @@ public class MessageActivity extends BaseActivity {
     EditText messageInput;
     ImageButton sendMessageButton;
     RecyclerView recyclerView;
+    ConstraintLayout messageLayout;
     private MessageRoom messageRoom;
     List<Message> messages = new ArrayList<>();
     FirebaseFirestore firestore = FirebaseFirestore.getInstance();
@@ -33,6 +35,8 @@ public class MessageActivity extends BaseActivity {
         getLayoutInflater().inflate(R.layout.activity_message,findViewById(R.id.activity_content));
         messageInput = findViewById(R.id.inputField);
         sendMessageButton = findViewById(R.id.sendMessageButton);
+        messageLayout = findViewById(R.id.message_layout);
+        recyclerView = findViewById(R.id.message_recycler);
         //firestore =
         //loadMockData();
         sendMessageButton.setOnClickListener(v->{

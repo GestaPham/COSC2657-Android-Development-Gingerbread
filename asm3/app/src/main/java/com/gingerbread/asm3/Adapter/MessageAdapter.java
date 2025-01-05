@@ -30,7 +30,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
 
         public ViewHolder(View view) {
             super(view);
-            messageProfileImage = view.findViewById(R.id.chatProfileImgLeft);
+            messageProfileImage = view.findViewById(R.id.messageProfileImage);
             messageText = view.findViewById(R.id.messageText);
             // Define click listener for the ViewHolder's View
         }
