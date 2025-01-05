@@ -67,8 +67,12 @@ public class MessageActivity extends BaseActivity {
                 if (TextUtils.isEmpty(sharedToken) || !sharedToken.startsWith("LINKED_")) {
                     showNoPartnerMessage();
                 } else {
+                    // Extract partner ID from shared token
                     String[] tokens = sharedToken.split("_");
-                    partnerId = tokens[2];
+                    String userId1 = tokens[1];
+                    String userId2 = tokens[2];
+                    partnerId = userId1.equals(currentUserId) ? userId2 : userId1;
+
                     loadPartnerName();
                     loadChat();
                 }
@@ -84,8 +88,8 @@ public class MessageActivity extends BaseActivity {
     private void loadPartnerName() {
         userService.getUser(partnerId, new UserService.UserCallback() {
             @Override
-            public void onSuccess(Map<String, Object> userData) {
-                partnerName = (String) userData.get("name");
+            public void onSuccess(Map<String, Object> partnerData) {
+                partnerName = (String) partnerData.get("name");
                 textViewPartnerName.setText(partnerName != null ? partnerName : "Partner");
                 textViewPartnerName.setVisibility(View.VISIBLE);
             }
