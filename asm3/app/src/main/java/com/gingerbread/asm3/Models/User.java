@@ -15,12 +15,14 @@ public class User implements Serializable {
     private boolean isPremium;
     private String fcmToken;            // For push notifications
     private String shareToken;          // For linking with a partner
+    private String pendingPartner;      // check if there's a pending partner request
 
     public User() {
     }
 
     public User(String userId, String name, String email, String profilePictureUrl, int age, String gender,
-                String nationality, String religion, String location, boolean isPremium, String fcmToken, String shareToken) {
+                String nationality, String religion, String location, boolean isPremium, String fcmToken,
+                String shareToken, String pendingPartner) {
         this.userId = userId;
         this.name = name;
         this.email = email;
@@ -33,6 +35,7 @@ public class User implements Serializable {
         this.isPremium = isPremium;
         this.fcmToken = fcmToken;
         this.shareToken = shareToken;
+        this.pendingPartner = pendingPartner;
     }
 
     public String getUserId() {
@@ -129,5 +132,13 @@ public class User implements Serializable {
 
     public void setShareToken(String shareToken) {
         this.shareToken = shareToken;
+    }
+
+    public String getPendingPartner() {
+        return pendingPartner;
+    }
+
+    public void setPendingPartner(String pendingPartner) {
+        this.pendingPartner = pendingPartner;
     }
 }
