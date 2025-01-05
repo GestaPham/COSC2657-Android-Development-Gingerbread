@@ -7,11 +7,15 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.gingerbread.asm3.Models.Message;
 import com.gingerbread.asm3.Models.MessageRoom;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MessageActivity extends BaseActivity {
     private User user2;
@@ -20,7 +24,8 @@ public class MessageActivity extends BaseActivity {
     ImageButton sendMessageButton;
     RecyclerView recyclerView;
     private MessageRoom messageRoom;
-    FirebaseFirestore firestore = FirebaseFirestore.getInstance();;
+    List<Message> messages = new ArrayList<>();
+    FirebaseFirestore firestore = FirebaseFirestore.getInstance();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +50,6 @@ public class MessageActivity extends BaseActivity {
         return R.id.nav_message;
     }
     private void getMessageRoom(){
-        firestore.get
+
     }
 }
