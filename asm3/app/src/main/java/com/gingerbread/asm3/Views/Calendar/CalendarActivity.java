@@ -66,4 +66,7 @@ public class CalendarActivity extends BaseActivity {
             Toast.makeText(this, "No suitable application found to add events.", Toast.LENGTH_SHORT).show();
         }
     }
+    private void addMemory(){
+
+    }
 }
