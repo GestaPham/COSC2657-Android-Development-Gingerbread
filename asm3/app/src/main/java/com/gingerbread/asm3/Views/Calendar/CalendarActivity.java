@@ -96,4 +96,5 @@ public class CalendarActivity extends AppCompatActivity {
             Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
         }
     }
+
 }
