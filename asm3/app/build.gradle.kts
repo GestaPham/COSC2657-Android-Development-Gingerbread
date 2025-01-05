@@ -33,9 +33,9 @@ android {
 }
 
 dependencies {
-    implementation("com.android.volley:volley:1.2.1")
-    implementation("com.github.bumptech.glide:glide:4.15.1")
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation(libs.android.volley)
+    implementation(libs.glide)
+    implementation(libs.mpandroidchart)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)

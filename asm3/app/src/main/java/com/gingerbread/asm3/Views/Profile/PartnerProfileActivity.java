@@ -160,8 +160,17 @@ public class PartnerProfileActivity extends BaseActivity {
                         @Override
                         public void onSuccess(Map<String, Object> partnerData) {
                             if (partnerData != null) {
-                                String partnerEmail = partnerData.get("email") != null ? partnerData.get("email").toString() : "Unknown";
-                                displayPendingInvitation(partnerEmail);
+                                partnerUser = new User();
+                                partnerUser.setUserId(pendingPartnerId);
+                                partnerUser.setEmail(partnerData.get("email") != null ? partnerData.get("email").toString() : "N/A");
+                                partnerUser.setName(partnerData.get("name") != null ? partnerData.get("name").toString() : "N/A");
+                                partnerUser.setAge(partnerData.get("age") != null ? (int) ((long) partnerData.get("age")) : 0);
+                                partnerUser.setGender(partnerData.get("gender") != null ? partnerData.get("gender").toString() : "N/A");
+                                partnerUser.setNationality(partnerData.get("nationality") != null ? partnerData.get("nationality").toString() : "N/A");
+                                partnerUser.setReligion(partnerData.get("religion") != null ? partnerData.get("religion").toString() : "N/A");
+                                partnerUser.setLocation(partnerData.get("location") != null ? partnerData.get("location").toString() : "N/A");
+
+                                displayPendingInvitation(partnerUser.getEmail());
                             } else {
                                 displayNoPartnerLinked();
                             }
@@ -199,7 +208,7 @@ public class PartnerProfileActivity extends BaseActivity {
         String userId = currentUser.getUserId();
         String partnerId = partnerUser.getUserId();
 
-        String sharedToken = userId + "_" + partnerId;
+        String sharedToken = "LINKED_" + userId + "_" + partnerId;
 
         userService.updateUser(userId, Map.of("shareToken", sharedToken, "pendingPartner", ""), new UserService.UpdateCallback() {
             @Override
@@ -279,6 +288,13 @@ public class PartnerProfileActivity extends BaseActivity {
             public void onSuccess(Map<String, Object> partnerData) {
                 if (partnerData != null) {
                     String partnerId = partnerData.get("userId").toString();
+                    String partnerShareToken = partnerData.get("shareToken") != null ? partnerData.get("shareToken").toString() : "";
+
+                    if (!TextUtils.isEmpty(partnerShareToken) && partnerShareToken.startsWith("LINKED")) {
+                        Toast.makeText(PartnerProfileActivity.this, "This person already has a partner.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
                     userService.updateUser(partnerId, Map.of("pendingPartner", currentUser.getUserId()), new UserService.UpdateCallback() {
                         @Override
                         public void onSuccess() {
