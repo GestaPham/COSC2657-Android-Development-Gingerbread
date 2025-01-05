@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -60,6 +61,9 @@ public class PartnerProfileActivity extends BaseActivity {
 
         progressBarLoading = findViewById(R.id.progressBarLoading);
         contentLayout = findViewById(R.id.contentLayout);
+
+        ImageButton buttonBack = findViewById(R.id.buttonBack);
+        buttonBack.setOnClickListener(v -> onBackPressed());
 
         userService = new UserService();
         loadCurrentUser();
