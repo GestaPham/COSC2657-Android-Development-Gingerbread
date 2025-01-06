@@ -114,7 +114,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     }
     @Override
     protected int getLayoutId() {
-        return R.layout.activity_calendar;
+        return R.layout.activity_base;
     }
 
     @Override
