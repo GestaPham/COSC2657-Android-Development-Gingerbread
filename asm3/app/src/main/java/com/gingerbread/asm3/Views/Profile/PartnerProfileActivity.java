@@ -20,6 +20,9 @@ import com.gingerbread.asm3.Services.RelationshipService;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 public class PartnerProfileActivity extends BaseActivity {
@@ -249,7 +252,8 @@ public class PartnerProfileActivity extends BaseActivity {
 
     private void createRelationship(String sharedToken, Runnable onSuccess) {
         String relationshipId = java.util.UUID.randomUUID().toString();
-        String startDate = String.valueOf(System.currentTimeMillis());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String startDate = sdf.format(new Date());
 
         Relationship newRelationship = new Relationship(
                 relationshipId,
@@ -260,7 +264,7 @@ public class PartnerProfileActivity extends BaseActivity {
         );
 
         RelationshipService relationshipService = new RelationshipService();
-        relationshipService.addRelationship(newRelationship, new RelationshipService.RelationshipCallback() {
+        relationshipService.createRelationship(newRelationship, new RelationshipService.RelationshipCallback() {
             @Override
             public void onSuccess(Relationship relationship) {
                 onSuccess.run();

@@ -183,13 +183,16 @@ public class MainActivity extends BaseActivity {
     }
 
     private void createRelationship() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String currentDate = sdf.format(new Date());
+
         Relationship newRelationship = new Relationship();
         newRelationship.setShareToken(user.getShareToken());
-        newRelationship.setStartDate(getCurrentDate());
-        newRelationship.setDaysTogether(0);
+        newRelationship.setStartDate(currentDate);
+        newRelationship.setDaysTogether(1);
         newRelationship.setRelationshipStatus("Active");
 
-        relationshipService.addRelationship(newRelationship, new RelationshipService.RelationshipCallback() {
+        relationshipService.createRelationship(newRelationship, new RelationshipService.RelationshipCallback() {
             @Override
             public void onSuccess(Relationship relationship) {
                 displayDaysTogether(relationship.getDaysTogether());
@@ -204,43 +207,13 @@ public class MainActivity extends BaseActivity {
     }
 
     private void displayDaysTogether(int daysTogether) {
-        int years = daysTogether / 365 ;
+        int years = daysTogether / 365;
         int months = (daysTogether % 365) / 30;
         int days = (daysTogether % 365) % 30;
 
         textViewTogetherYears.setText(String.valueOf(years));
         textViewTogetherMonths.setText(String.valueOf(months));
         textViewTogetherDays.setText(String.valueOf(days));
-    }
-
-    private String getCurrentDate() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        return sdf.format(new Date());
-    }
-
-    private void loadDateTogetherStatss() {
-        try {
-            InputStream is = getAssets().open("mock_together_stats.json");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-            String json = new String(buffer, "UTF-8");
-
-            JSONObject jsonObject = new JSONObject(json);
-            JSONObject statsObject = jsonObject.getJSONObject("togetherStats");
-
-            int years = statsObject.getInt("years");
-            int months = statsObject.getInt("months");
-            int days = statsObject.getInt("days");
-
-            textViewTogetherYears.setText(String.valueOf(years));
-            textViewTogetherMonths.setText(String.valueOf(months));
-            textViewTogetherDays.setText(String.valueOf(days));
-
-        } catch (Exception e) {
-            Toast.makeText(this, "Error loading mock data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
     }
 
     private void initializeMoodTracking() {

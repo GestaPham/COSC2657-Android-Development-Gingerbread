@@ -18,7 +18,7 @@ public class RelationshipService {
         relationshipsCollection = firestore.collection("relationships");
     }
 
-    public void addRelationship(Relationship relationship, RelationshipCallback callback) {
+    public void createRelationship(Relationship relationship, RelationshipCallback callback) {
         String relationshipId = relationshipsCollection.document().getId();
         relationship.setRelationshipId(relationshipId);
 
