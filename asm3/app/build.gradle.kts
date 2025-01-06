@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.firebase.firestore)
+    implementation(libs.google.firebase.storage)
     implementation(libs.okhttp)
     implementation(libs.material.v190)
     implementation(libs.androidx.recyclerview)
