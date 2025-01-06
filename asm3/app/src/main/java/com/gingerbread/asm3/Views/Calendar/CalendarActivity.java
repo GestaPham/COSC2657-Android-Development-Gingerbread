@@ -1,6 +1,7 @@
 package com.gingerbread.asm3.Views.CalendarActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -111,22 +112,19 @@ public class CalendarActivity extends AppCompatActivity {
         calendarService.addMemory(newMemory,this);
     }
     private void fetchUsersMemories(String currentUserId){
-        calendarService.getAllMemories(currentUserId, new CalendarService.MemoryCallback() {
-            @Override
-            public void onMemoryFetched(Memory memory) {
-
-            }
+        calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
 
             @Override
             public void onError(Exception e) {
-
+                Log.e("UsersMemoryCallback", "Error fetching memory: ", e);
             }
 
             @Override
-            public void onMemoriesFetched(List<Memory> memories) {
+            public List<Memory> onMemoriesFetched(List<Memory> memories) {
 
             }
         });
+
     }
 
 }

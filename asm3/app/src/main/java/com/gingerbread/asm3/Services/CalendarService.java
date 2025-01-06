@@ -19,19 +19,6 @@ public class CalendarService {
         firestore = FirebaseFirestore.getInstance();
         this.memoriesCollection = firestore.collection("memories");
     }
-    public void getAMemory(String memoriesId,MemoryCallback callback){
-        firestore.collection("memories").get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    for (QueryDocumentSnapshot memories : queryDocumentSnapshots){
-                        if(memories.get("memoryId").equals(memoriesId)){
-                            Memory returnedMemory = memories.toObject(Memory.class);
-                            callback.onMemoryFetched(returnedMemory);
-                        }
-                    }
-                }).addOnFailureListener(e->{
-                    callback.onError(e);
-                });
-    }
     public void getAllMemories(String userId,MemoryCallback callback){
         firestore.collection("memories").get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -74,14 +61,11 @@ public class CalendarService {
                     toast.show();
                 });
     }
-    public interface MemoryCallback {
-        void onMemoryFetched(Memory memory);
+    public interface UsersMemoriesCallback {
         void onError(Exception e);
-        void onMemoriesFetched(List<Memory> memories);
+        List<Memory> onMemoriesFetched(List<Memory> memories);
     }
-    public interface UpdateCallback{
-        void onUpdateSuccess();
-        void onUpdateFailure();
-    }
+
+
 }
 
