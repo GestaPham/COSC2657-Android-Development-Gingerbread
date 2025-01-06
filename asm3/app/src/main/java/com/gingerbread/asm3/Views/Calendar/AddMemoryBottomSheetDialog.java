@@ -2,9 +2,11 @@ package com.gingerbread.asm3.Views.Calendar;
 
 import static android.app.Activity.RESULT_OK;
 
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -79,7 +81,6 @@ public class AddMemoryBottomSheetDialog extends BottomSheetDialogFragment {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE_REQ && resultCode == RESULT_OK && data != null && data.getData() != null) {
             imageUri = data.getData(); // This is the URI of the selected image
-            uploadImageToCloudStorage();
         }
     }
     private void uploadImageToCloudStorage(){
