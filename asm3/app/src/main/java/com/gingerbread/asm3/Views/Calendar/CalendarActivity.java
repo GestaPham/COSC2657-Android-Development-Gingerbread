@@ -12,7 +12,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.CalendarService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +26,8 @@ public class CalendarActivity extends AppCompatActivity {
     private Button addEventButton, addMemoryButton;
     private long selectedDate;
     private HashMap<Long, List<String>> eventsMap = new HashMap<>();
+    private HashMap<String, Memory> memoryHashMap = new HashMap<>();
+    private CalendarService calendarService = new CalendarService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +99,34 @@ public class CalendarActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
         }
+    }
+    private void addNewMemory(String name,String note,String date,String imageUrl,String userId,String relationshipId){
+        Memory newMemory = new Memory();
+        newMemory.setNote(note);
+        newMemory.setMemoryName(name);
+        newMemory.setDate(date);
+        newMemory.setImageUrl(imageUrl);
+        newMemory.setUserId(userId);
+        newMemory.setRelationshipId(relationshipId);
+        calendarService.addMemory(newMemory,this);
+    }
+    private void fetchUsersMemories(String currentUserId){
+        calendarService.getAllMemories(currentUserId, new CalendarService.MemoryCallback() {
+            @Override
+            public void onMemoryFetched(Memory memory) {
+
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+
+            @Override
+            public void onMemoriesFetched(List<Memory> memories) {
+
+            }
+        });
     }
 
 }
