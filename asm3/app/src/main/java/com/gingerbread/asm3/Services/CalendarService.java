@@ -19,7 +19,7 @@ public class CalendarService {
         firestore = FirebaseFirestore.getInstance();
         this.memoriesCollection = firestore.collection("memories");
     }
-    public void getAllMemories(String userId,MemoryCallback callback){
+    public void getAllMemories(String userId, UsersMemoriesCallback callback){
         firestore.collection("memories").get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<Memory> memoriesList = new ArrayList<>();
@@ -63,7 +63,7 @@ public class CalendarService {
     }
     public interface UsersMemoriesCallback {
         void onError(Exception e);
-        List<Memory> onMemoriesFetched(List<Memory> memories);
+        void onMemoriesFetched(List<Memory> memories);
     }
 
 

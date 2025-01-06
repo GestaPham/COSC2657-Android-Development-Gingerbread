@@ -18,6 +18,8 @@ import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import com.gingerbread.asm3.Services.CalendarService;
 
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
 
 public class CalendarActivity extends BaseActivity {
 
@@ -67,6 +69,27 @@ public class CalendarActivity extends BaseActivity {
             Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
         }
     }
+    private void addMemory() {
+        Intent intent = new Intent(Intent.ACTION_INSERT);
+    }
+    private void fetchUsersMemories(String currentUserId){
+        calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
+            @Override
+            public void onError(Exception e) {
+                Log.e("UsersMemoryCallback", "Error fetching memory: ", e);
+                Toast toast = Toast.makeText(CalendarActivity.this,"Error fetching memories", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+
+            @Override
+            public void onMemoriesFetched(List<Memory> memories) {
+
+            }
+        });
+
+    }
+
+
     private void addNewMemory(String name,String note,String date,String imageUrl,String userId,String relationshipId){
         Memory newMemory = new Memory();
         newMemory.setNote(note);
@@ -76,25 +99,6 @@ public class CalendarActivity extends BaseActivity {
         newMemory.setUserId(userId);
         newMemory.setRelationshipId(relationshipId);
         calendarService.addMemory(newMemory,this);
-    }
-    private void fetchUsersMemories(String currentUserId){
-        calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
-
-            @Override
-            public void onError(Exception e) {
-                Log.e("UsersMemoryCallback", "Error fetching memory: ", e);
-            }
-
-            @Override
-            public List<Memory> onMemoriesFetched(List<Memory> memories) {
-
-            }
-        });
-
-    }
-
-    private void addMemory() {
-        
     }
     @Override
     protected int getLayoutId() {
