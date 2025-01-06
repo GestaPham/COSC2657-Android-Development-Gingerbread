@@ -25,8 +25,8 @@
         android:id="@+id/spinnerMood"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:entries="@array/mood_array" />
+        android:visibility="gone"/>
+       <!--android:entries="@array/mood_array"-->
 
     <Button
         android:id="@+id/buttonAdd"

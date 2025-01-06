@@ -16,16 +16,20 @@ import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import com.gingerbread.asm3.Services.CalendarService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 
-public class CalendarActivity extends BaseActivity {
+public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener{
 
     private CalendarView calendarView;
     private Button addEventButton, addMemoryButton;
     private long selectedDate;
+    private FirebaseAuth auth;
+    private FirebaseUser currentUser;
     private HashMap<Long, List<String>> eventsMap = new HashMap<>();
     private HashMap<String, Memory> memoryHashMap = new HashMap<>();
     private CalendarService calendarService = new CalendarService();
@@ -34,7 +38,8 @@ public class CalendarActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getLayoutInflater().inflate(R.layout.activity_calendar, findViewById(R.id.activity_content));
-
+        auth = FirebaseAuth.getInstance();
+        currentUser = auth.getCurrentUser();
         calendarView = findViewById(R.id.calendarView);
         addEventButton = findViewById(R.id.addEventButton);
         addMemoryButton = findViewById(R.id.addMemoryButton);
@@ -70,8 +75,16 @@ public class CalendarActivity extends BaseActivity {
         }
     }
     private void addMemory() {
-        Intent intent = new Intent(Intent.ACTION_INSERT);
+        new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                AddMemoryBottomSheetDialog addMemoryBottomSheetDialog = new AddMemoryBottomSheetDialog();
+                addMemoryBottomSheetDialog.show(getSupportFragmentManager(),"AddMemoryBottomSheet");
+
+            }
+        };
     }
+
     private void fetchUsersMemories(String currentUserId){
         calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
             @Override
@@ -108,5 +121,10 @@ public class CalendarActivity extends BaseActivity {
     @Override
     protected int getSelectedMenuItemId() {
         return R.id.nav_calendar;
+    }
+
+    @Override
+    public void onMemoryAdded(String name, String note, String date) {
+        addNewMemory(name,note, String.valueOf(selectedDate),photoUrl, currentUser.getUid(),"");
     }
 }
