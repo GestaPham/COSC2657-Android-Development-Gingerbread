@@ -10,7 +10,9 @@ import android.widget.CalendarView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.viewpager2.widget.ViewPager2;
 
+import com.gingerbread.asm3.Adapter.MemoryAdapter;
 import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
@@ -18,6 +20,11 @@ import com.gingerbread.asm3.Services.CalendarService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +36,8 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private long selectedDate;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
+    private ViewPager2 viewPagerMemories;
+    private MemoryAdapter memoryAdapter;
     private HashMap<Long, List<String>> eventsMap = new HashMap<>();
     private HashMap<String, Memory> memoryHashMap = new HashMap<>();
     private CalendarService calendarService = new CalendarService();
@@ -101,7 +110,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
     }
 
-
     private void addNewMemory(String name,String note,String date,String imageUrl,String userId,String relationshipId){
         Memory newMemory = new Memory();
         newMemory.setNote(note);
@@ -111,6 +119,37 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         newMemory.setUserId(userId);
         newMemory.setRelationshipId(relationshipId);
         calendarService.addMemory(newMemory,this);
+    }
+
+    private void initializeMemoryRecycler(){
+        try {
+            InputStream is = getAssets().open("mock_memories.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+
+            String json = new String(buffer, "UTF-8");
+            JSONObject jsonObject = new JSONObject(json);
+            JSONArray memoryArray = jsonObject.getJSONArray("memories");
+
+            List<Memory> memories = new ArrayList<>();
+            for (int i = 0; i < memoryArray.length(); i++) {
+                JSONObject obj = memoryArray.getJSONObject(i);
+
+                memories.add(new Memory(obj.getString("memoryId"), obj.getString("memoryName"), obj.getString("date"), obj.getString("note"), obj.getString("imageUrl"), obj.optString("userId", "defaultUserId"), obj.optString("relationshipId", "defaultRelationshipId")));
+            }
+
+            memoryAdapter = new MemoryAdapter(memories, memory -> {
+
+            });
+
+            viewPagerMemories.setAdapter(memoryAdapter);
+            viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Error loading memories: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
     @Override
     protected int getLayoutId() {
