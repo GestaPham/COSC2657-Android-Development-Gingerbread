@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -19,14 +20,19 @@ import com.bumptech.glide.Glide;
 import com.gingerbread.asm3.Adapter.MemoryAdapter;
 import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.Models.MoodLog;
+import com.gingerbread.asm3.Models.Relationship;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.MilestoneService;
+import com.gingerbread.asm3.Services.RelationshipService;
+import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import com.gingerbread.asm3.Views.MoodTracker.MoodTrackerActivity;
 import com.gingerbread.asm3.Views.Notification.NotificationActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,6 +44,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends BaseActivity {
 
@@ -47,6 +54,15 @@ public class MainActivity extends BaseActivity {
     private MemoryAdapter memoryAdapter;
     private FirebaseFirestore firestore;
     private FirebaseAuth auth;
+
+    private User user;
+    private UserService userService;
+
+    private Relationship relationship;
+    private RelationshipService relationshipService;
+
+
+    private MilestoneService milestoneService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,10 +87,11 @@ public class MainActivity extends BaseActivity {
         firestore = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
-        loadMockData();
-        fetchUserData();
-        initializeMoodTracking();
-        initializeMemoryCarousel();
+        userService = new UserService();
+        relationshipService = new RelationshipService();
+        milestoneService = new MilestoneService();
+
+        fetchData();
 
         notificationIcon.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
@@ -99,31 +116,109 @@ public class MainActivity extends BaseActivity {
         return R.id.nav_home;
     }
 
-    private void fetchUserData() {
-        String userId = auth.getCurrentUser().getUid();
+    private void fetchData() {
+        String userId = userService.getCurrentUserId();
 
-        firestore.collection("users").document(userId).get().addOnSuccessListener(documentSnapshot -> {
-            if (documentSnapshot.exists()) {
-                User user = documentSnapshot.toObject(User.class);
+        if (userId == null) {
+            Toast.makeText(this, "User is not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-                if (user != null) {
-                    textViewGreeting.setText("Hi, " + user.getName());
+        userService.getUser(userId, new UserService.UserCallback() {
+            @Override
+            public void onSuccess(Map<String, Object> userData) {
+                user = new Gson().fromJson(new Gson().toJson(userData), User.class);
 
-                    if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
-                        Glide.with(this).load(user.getProfilePictureUrl()).placeholder(R.drawable.ic_placeholder).into(imageViewProfile);
-                    } else {
-                        imageViewProfile.setImageResource(R.drawable.ic_placeholder);
-                    }
-                }
-            } else {
-                Toast.makeText(this, "User data not found", Toast.LENGTH_SHORT).show();
+                displayUserDetails();
+                loadDateTogetherStats();
+                initializeMoodTracking();
+                initializeMemoryCarousel();
             }
-        }).addOnFailureListener(e -> {
-            Toast.makeText(this, "Error fetching user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(MainActivity.this, "Error fetching user data: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
-    private void loadMockData() {
+    private void displayUserDetails() {
+        if (user != null) {
+            textViewGreeting.setText("Hi, " + user.getName());
+
+            if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
+                Glide.with(this)
+                        .load(user.getProfilePictureUrl())
+                        .placeholder(R.drawable.ic_placeholder)
+                        .into(imageViewProfile);
+            } else {
+                imageViewProfile.setImageResource(R.drawable.ic_placeholder);
+            }
+        }
+    }
+
+    private void loadDateTogetherStats() {
+        if (user.getShareToken() == null || user.getShareToken().isEmpty()) {
+            Toast.makeText(this, "No linked relationship found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        relationshipService.getRelationshipByShareToken(user.getShareToken(), new RelationshipService.RelationshipCallback() {
+            @Override
+            public void onSuccess(Relationship relationship) {
+                if (relationship != null) {
+                    displayDaysTogether(relationship.getDaysTogether());
+                } else {
+                    createRelationship();
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.d("RelationshipService", "Fetching relationship for shareToken: " + user.getShareToken());
+
+                Toast.makeText(MainActivity.this, "Error fetching relationship stats: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void createRelationship() {
+        Relationship newRelationship = new Relationship();
+        newRelationship.setShareToken(user.getShareToken());
+        newRelationship.setStartDate(getCurrentDate());
+        newRelationship.setDaysTogether(0);
+        newRelationship.setRelationshipStatus("Active");
+
+        relationshipService.addRelationship(newRelationship, new RelationshipService.RelationshipCallback() {
+            @Override
+            public void onSuccess(Relationship relationship) {
+                displayDaysTogether(relationship.getDaysTogether());
+                Toast.makeText(MainActivity.this, "Relationship created successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(MainActivity.this, "Error creating relationship: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void displayDaysTogether(int daysTogether) {
+        int years = daysTogether / 365 ;
+        int months = (daysTogether % 365) / 30;
+        int days = (daysTogether % 365) % 30;
+
+        textViewTogetherYears.setText(String.valueOf(years));
+        textViewTogetherMonths.setText(String.valueOf(months));
+        textViewTogetherDays.setText(String.valueOf(days));
+    }
+
+    private String getCurrentDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(new Date());
+    }
+
+    private void loadDateTogetherStatss() {
         try {
             InputStream is = getAssets().open("mock_together_stats.json");
             int size = is.available();

@@ -13,8 +13,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.gingerbread.asm3.Models.Relationship;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.RelationshipService;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 
@@ -211,17 +213,24 @@ public class PartnerProfileActivity extends BaseActivity {
     private void linkPartner() {
         String userId = currentUser.getUserId();
         String partnerId = partnerUser.getUserId();
+        String sharedToken = "LINKED_" + java.util.UUID.randomUUID().toString();
 
-        String sharedToken = "LINKED_" + userId + "_" + partnerId;
+        updateUsersWithSharedToken(userId, partnerId, sharedToken, () -> {
+            createRelationship(sharedToken, () -> {
+                Toast.makeText(this, "Partner linked successfully!", Toast.LENGTH_SHORT).show();
+                loadPartnerProfile();
+            });
+        });
+    }
 
+    private void updateUsersWithSharedToken(String userId, String partnerId, String sharedToken, Runnable onSuccess) {
         userService.updateUser(userId, Map.of("shareToken", sharedToken, "pendingPartner", ""), new UserService.UpdateCallback() {
             @Override
             public void onSuccess() {
                 userService.updateUser(partnerId, Map.of("shareToken", sharedToken, "pendingPartner", ""), new UserService.UpdateCallback() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(PartnerProfileActivity.this, "Partner linked successfully", Toast.LENGTH_SHORT).show();
-                        loadPartnerProfile();
+                        onSuccess.run();
                     }
 
                     @Override
@@ -234,6 +243,32 @@ public class PartnerProfileActivity extends BaseActivity {
             @Override
             public void onFailure(String errorMessage) {
                 Toast.makeText(PartnerProfileActivity.this, "Error linking partner: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void createRelationship(String sharedToken, Runnable onSuccess) {
+        String relationshipId = java.util.UUID.randomUUID().toString();
+        String startDate = String.valueOf(System.currentTimeMillis());
+
+        Relationship newRelationship = new Relationship(
+                relationshipId,
+                sharedToken,
+                startDate,
+                1,
+                "Active"
+        );
+
+        RelationshipService relationshipService = new RelationshipService();
+        relationshipService.addRelationship(newRelationship, new RelationshipService.RelationshipCallback() {
+            @Override
+            public void onSuccess(Relationship relationship) {
+                onSuccess.run();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(PartnerProfileActivity.this, "Error saving relationship: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
     }
