@@ -3,6 +3,8 @@ package com.gingerbread.asm3.Views.Calendar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.CalendarContract;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CalendarView;
@@ -10,8 +12,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
+import com.gingerbread.asm3.Services.CalendarService;
 
 import java.util.GregorianCalendar;
 
@@ -20,6 +24,9 @@ public class CalendarActivity extends BaseActivity {
     private CalendarView calendarView;
     private Button addEventButton, addMemoryButton;
     private long selectedDate;
+    private HashMap<Long, List<String>> eventsMap = new HashMap<>();
+    private HashMap<String, Memory> memoryHashMap = new HashMap<>();
+    private CalendarService calendarService = new CalendarService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +66,31 @@ public class CalendarActivity extends BaseActivity {
         } else {
             Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
         }
+    }
+    private void addNewMemory(String name,String note,String date,String imageUrl,String userId,String relationshipId){
+        Memory newMemory = new Memory();
+        newMemory.setNote(note);
+        newMemory.setMemoryName(name);
+        newMemory.setDate(date);
+        newMemory.setImageUrl(imageUrl);
+        newMemory.setUserId(userId);
+        newMemory.setRelationshipId(relationshipId);
+        calendarService.addMemory(newMemory,this);
+    }
+    private void fetchUsersMemories(String currentUserId){
+        calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("UsersMemoryCallback", "Error fetching memory: ", e);
+            }
+
+            @Override
+            public List<Memory> onMemoriesFetched(List<Memory> memories) {
+
+            }
+        });
+
     }
 
     private void addMemory() {
