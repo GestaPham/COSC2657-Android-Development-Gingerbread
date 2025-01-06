@@ -45,11 +45,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:backgroundTint="@color/light_blue"
+        android:backgroundTint="@color/light_pink"
         android:padding="16dp"
         android:text="View Events"
         android:textColor="@android:color/white"
         android:textSize="16sp"
         android:textStyle="bold" />
-
+    <Button
+        android:id="@+id/addMemoryButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="@color/light_pink"
+        android:text="Add Memory"
+        android:textColor="@android:color/white" />
 </LinearLayout>

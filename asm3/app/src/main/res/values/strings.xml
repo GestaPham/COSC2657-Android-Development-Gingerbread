@@ -1,9 +1,3 @@
 <resources>
     <string name="app_name">♡SinceWhen</string>
 </resources>
-<string-array name="mood_array">
-    <item>Happy</item>
-    <item>Sad</item>
-    <item>Excited</item>
-    <item>Reflective</item>
-</string-array>
