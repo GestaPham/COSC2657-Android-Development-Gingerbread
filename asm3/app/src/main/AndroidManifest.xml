@@ -17,6 +17,9 @@
         android:theme="@style/Base.Theme.Asm"
         tools:targetApi="31">
         <activity
+            android:name=".Views.Support.HelpCenterActivity"
+            android:exported="false" />
+        <activity
             android:name=".Views.MoodTracker.MoodTrackerActivity"
             android:exported="false" />
         <activity

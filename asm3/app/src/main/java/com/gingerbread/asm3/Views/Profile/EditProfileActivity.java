@@ -46,7 +46,7 @@ public class EditProfileActivity extends BaseActivity {
         loadProfileDetails();
 
         ImageButton buttonBack = findViewById(R.id.buttonBack);
-        buttonBack.setOnClickListener(v -> onBackPressed());
+        buttonBack.setOnClickListener(v -> finish());
 
         buttonSave.setOnClickListener(v -> saveProfileDetails());
         buttonCancel.setOnClickListener(v -> finish());
