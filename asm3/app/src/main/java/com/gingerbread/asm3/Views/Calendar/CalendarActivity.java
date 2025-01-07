@@ -37,12 +37,10 @@ import java.util.List;
 public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener{
 
     private CalendarView calendarView;
-    private Button addEventButton, addMemoryButton;
     private ImageButton addMemoryButton2,addEventButton2;
     private long selectedDate;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
-    private ViewPager2 viewPagerMemories;
     private MemoryAdapter memoryAdapter;
     private HashMap<Long, List<String>> eventsMap = new HashMap<>();
     private HashMap<String, Memory> memoryHashMap = new HashMap<>();
@@ -104,6 +102,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private void addMemory() {
         AddMemoryBottomSheetDialog addMemoryBottomSheetDialog = new AddMemoryBottomSheetDialog();
         addMemoryBottomSheetDialog.show(getSupportFragmentManager(),"AddMemoryBottomSheet");
+        Log.d("CurrentUserID",currentUser.getUid());
     }
 
     private void fetchUsersMemories(String currentUserId){
@@ -133,6 +132,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         newMemory.setUserId(userId);
         newMemory.setRelationshipId(relationshipId);
         calendarService.addMemory(newMemory,this);
+
     }
     @Override
     protected int getLayoutId() {
@@ -146,6 +146,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
     @Override
     public void onMemoryAdded(String name, String note, String date, String imageUrl) {
+        Log.d("CurrentUserID",currentUser.getUid());
         addNewMemory(name,note, date,imageUrl, currentUser.getUid(),"");
     }
 
