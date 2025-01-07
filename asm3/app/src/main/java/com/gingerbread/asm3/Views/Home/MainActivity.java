@@ -130,11 +130,17 @@ public class MainActivity extends BaseActivity {
             public void onSuccess(Map<String, Object> userData) {
                 user = new Gson().fromJson(new Gson().toJson(userData), User.class);
 
+                String userShareToken = user.getShareToken();
+
                 displayUserDetails();
 
-                loadDateTogetherStats();
-                initializeMoodTracking();
-                initializeMemoryCarousel();
+                if (userShareToken != null && userShareToken.startsWith("LINKED")) {
+                    loadDateTogetherStats();
+                    initializeMoodTracking();
+                    initializeMemoryCarousel();
+                } else {
+                    displayNoPartnerMessage();
+                }
             }
 
             @Override
@@ -142,6 +148,10 @@ public class MainActivity extends BaseActivity {
                 Toast.makeText(MainActivity.this, "Error fetching user data: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void displayNoPartnerMessage() {
+        getLayoutInflater().inflate(R.layout.item_no_partner, findViewById(R.id.activity_content));
     }
 
     private void displayUserDetails() {

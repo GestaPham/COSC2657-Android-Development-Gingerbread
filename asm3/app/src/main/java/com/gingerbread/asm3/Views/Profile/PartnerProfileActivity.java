@@ -216,7 +216,7 @@ public class PartnerProfileActivity extends BaseActivity {
     private void linkPartner() {
         String userId = currentUser.getUserId();
         String partnerId = partnerUser.getUserId();
-        String sharedToken = "LINKED_" + java.util.UUID.randomUUID().toString();
+        String sharedToken = "LINKED_" + userId + "_" + partnerId;
 
         updateUsersWithSharedToken(userId, partnerId, sharedToken, () -> {
             createRelationship(sharedToken, () -> {
