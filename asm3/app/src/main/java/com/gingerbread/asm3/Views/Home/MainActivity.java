@@ -24,6 +24,7 @@ import com.gingerbread.asm3.Models.Relationship;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.MilestoneService;
+import com.gingerbread.asm3.Services.MoodService;
 import com.gingerbread.asm3.Services.RelationshipService;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
@@ -31,7 +32,6 @@ import com.gingerbread.asm3.Views.MoodTracker.MoodTrackerActivity;
 import com.gingerbread.asm3.Views.Notification.NotificationActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -61,7 +61,7 @@ public class MainActivity extends BaseActivity {
     private Relationship relationship;
     private RelationshipService relationshipService;
 
-
+    private MoodService moodService;
     private MilestoneService milestoneService;
 
     @Override
@@ -90,6 +90,7 @@ public class MainActivity extends BaseActivity {
         userService = new UserService();
         relationshipService = new RelationshipService();
         milestoneService = new MilestoneService();
+        moodService = new MoodService();
 
         fetchData();
 
@@ -228,40 +229,39 @@ public class MainActivity extends BaseActivity {
     }
 
     private void fetchLatestMoodLog() {
-        String userId = auth.getCurrentUser().getUid();
+        String userId = user.getUserId();
 
-        firestore.collection("mood_logs").whereEqualTo("userId", userId).orderBy("date", Query.Direction.DESCENDING).limit(1).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            if (!queryDocumentSnapshots.isEmpty()) {
-                MoodLog latestMoodLog = queryDocumentSnapshots.toObjects(MoodLog.class).get(0);
-
-                // Check if the mood was logged for today or reset at 6 AM
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-                String lastLoggedDate = latestMoodLog.getDate();
-
-                Calendar calendar = Calendar.getInstance();
-                Calendar resetCalendar = Calendar.getInstance();
-                resetCalendar.set(Calendar.HOUR_OF_DAY, 6);
-                resetCalendar.set(Calendar.MINUTE, 0);
-                resetCalendar.set(Calendar.SECOND, 0);
-
-                Date now = calendar.getTime();
-                Date resetTime = resetCalendar.getTime();
-
+        moodService.getLatestMoodLog(userId, new MoodService.MoodLogCallback() {
+            @Override
+            public void onSuccess(MoodLog latestMoodLog) {
                 try {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                    String lastLoggedDate = latestMoodLog.getDate();
+
+                    Calendar calendar = Calendar.getInstance();
+                    Calendar resetCalendar = Calendar.getInstance();
+                    resetCalendar.set(Calendar.HOUR_OF_DAY, 6);
+                    resetCalendar.set(Calendar.MINUTE, 0);
+                    resetCalendar.set(Calendar.SECOND, 0);
+
+                    Date now = calendar.getTime();
+                    Date resetTime = resetCalendar.getTime();
                     Date lastLogDate = dateFormat.parse(lastLoggedDate);
+
                     if (now.after(resetTime) && (lastLogDate.before(resetTime) || !isSameDay(lastLogDate, now))) {
                         enableMoodSelection();
                     } else {
                         disableMoodSelection(latestMoodLog);
                     }
                 } catch (Exception e) {
-                    Toast.makeText(this, "Failed to parse date: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Failed to parse date: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-            } else {
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
                 enableMoodSelection();
             }
-        }).addOnFailureListener(e -> {
-            Toast.makeText(this, "Failed to fetch mood log: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
 
