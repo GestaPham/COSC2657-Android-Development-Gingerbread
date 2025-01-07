@@ -15,6 +15,7 @@ import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.Authentication.LoginActivity;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
+import com.gingerbread.asm3.Views.Support.HelpCenterActivity;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Map;
@@ -65,7 +66,8 @@ public class ProfileActivity extends BaseActivity {
         });
 
         buttonSupport.setOnClickListener(v -> {
-            // Logic to open customer support activity
+            Intent intent = new Intent(ProfileActivity.this, HelpCenterActivity.class);
+            startActivity(intent);
         });
 
         buttonLogout.setOnClickListener(v -> {

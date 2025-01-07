@@ -46,7 +46,7 @@ public class ProfileDetailsActivity extends BaseActivity {
         loadProfileDetails();
 
         ImageButton buttonBack = findViewById(R.id.buttonBack);
-        buttonBack.setOnClickListener(v -> onBackPressed());
+        buttonBack.setOnClickListener(v -> finish());
 
         textViewEditProfile.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileDetailsActivity.this, EditProfileActivity.class);

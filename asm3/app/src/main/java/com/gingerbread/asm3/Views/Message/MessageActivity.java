@@ -14,10 +14,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.gingerbread.asm3.Adapter.ChatAdapter;
 import com.gingerbread.asm3.Models.Message;
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.MessageService;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +24,8 @@ import java.util.Map;
 
 public class MessageActivity extends BaseActivity {
 
-    private FirebaseFirestore firestore;
     private UserService userService;
+    private MessageService messageService;
     private String currentUserId, partnerId, sharedToken, partnerName;
     private EditText editTextMessage;
     private ImageButton buttonSend;
@@ -40,8 +39,8 @@ public class MessageActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         getLayoutInflater().inflate(R.layout.activity_message, findViewById(R.id.activity_content));
 
-        firestore = FirebaseFirestore.getInstance();
         userService = new UserService();
+        messageService = new MessageService();
 
         currentUserId = userService.getCurrentUserId();
         editTextMessage = findViewById(R.id.editTextMessage);
@@ -55,7 +54,6 @@ public class MessageActivity extends BaseActivity {
         recyclerViewChat.setAdapter(chatAdapter);
 
         loadSharedToken();
-
         buttonSend.setOnClickListener(v -> sendMessage());
     }
 
@@ -67,12 +65,7 @@ public class MessageActivity extends BaseActivity {
                 if (TextUtils.isEmpty(sharedToken) || !sharedToken.startsWith("LINKED_")) {
                     showNoPartnerMessage();
                 } else {
-                    // Extract partner ID from shared token
-                    String[] tokens = sharedToken.split("_");
-                    String userId1 = tokens[1];
-                    String userId2 = tokens[2];
-                    partnerId = userId1.equals(currentUserId) ? userId2 : userId1;
-
+                    determinePartnerId();
                     loadPartnerName();
                     loadChat();
                 }
@@ -83,6 +76,13 @@ public class MessageActivity extends BaseActivity {
                 Toast.makeText(MessageActivity.this, "Failed to load user data: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void determinePartnerId() {
+        String[] tokens = sharedToken.split("_");
+        String userId1 = tokens[1];
+        String userId2 = tokens[2];
+        partnerId = userId1.equals(currentUserId) ? userId2 : userId1;
     }
 
     private void loadPartnerName() {
@@ -103,29 +103,20 @@ public class MessageActivity extends BaseActivity {
     }
 
     private void showNoPartnerMessage() {
-        findViewById(R.id.layoutNoPartner).setVisibility(View.VISIBLE);
         findViewById(R.id.layoutChat).setVisibility(View.GONE);
-        textViewPartnerName.setVisibility(View.GONE);
+        findViewById(R.id.layoutNoPartner).setVisibility(View.VISIBLE);
     }
 
     private void loadChat() {
         findViewById(R.id.layoutNoPartner).setVisibility(View.GONE);
         findViewById(R.id.layoutChat).setVisibility(View.VISIBLE);
 
-        CollectionReference chatRef = firestore.collection("chats").document(sharedToken).collection("messages");
-        chatRef.orderBy("timestamp").addSnapshotListener((value, error) -> {
-            if (error != null) {
-                Toast.makeText(this, "Failed to load messages: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (value != null) {
-                messages.clear();
-                messages.addAll(value.toObjects(Message.class));
-                chatAdapter.notifyDataSetChanged();
-                recyclerViewChat.scrollToPosition(messages.size() - 1);
-            }
-        });
+        messageService.getMessages(sharedToken, messages -> {
+            this.messages.clear();
+            this.messages.addAll(messages);
+            chatAdapter.notifyDataSetChanged();
+            recyclerViewChat.scrollToPosition(this.messages.size() - 1);
+        }, errorMessage -> Toast.makeText(this, "Failed to load messages: " + errorMessage, Toast.LENGTH_SHORT).show());
     }
 
     private void sendMessage() {
@@ -137,10 +128,12 @@ public class MessageActivity extends BaseActivity {
 
         Message message = new Message(text, sharedToken, partnerId, currentUserId, System.currentTimeMillis());
 
-        firestore.collection("chats").document(sharedToken).collection("messages").add(message).addOnSuccessListener(documentReference -> {
-            editTextMessage.setText("");
+        messageService.sendMessage(sharedToken, message, () -> {
+            messages.add(message);
+            chatAdapter.notifyItemInserted(messages.size() - 1);
             recyclerViewChat.scrollToPosition(messages.size() - 1);
-        }).addOnFailureListener(e -> Toast.makeText(this, "Failed to send message: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            editTextMessage.setText("");
+        }, errorMessage -> Toast.makeText(this, "Failed to send message: " + errorMessage, Toast.LENGTH_SHORT).show());
     }
 
     @Override
