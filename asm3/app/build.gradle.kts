@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.volley)
     implementation(libs.firebase.functions)
+    implementation(libs.gson)
 
     implementation(libs.appcompat)
     implementation(libs.material)

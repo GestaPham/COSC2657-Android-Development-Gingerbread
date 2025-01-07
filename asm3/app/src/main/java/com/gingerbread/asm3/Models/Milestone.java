@@ -2,16 +2,16 @@ package com.gingerbread.asm3.Models;
 
 public class Milestone {
     private String milestoneId;
-    private String userId;
+    private String shareToken;
     private String description;
     private String dateAchieved;
 
     public Milestone() {
     }
 
-    public Milestone(String milestoneId, String userId, String description, String dateAchieved) {
+    public Milestone(String milestoneId, String shareToken, String description, String dateAchieved) {
         this.milestoneId = milestoneId;
-        this.userId = userId;
+        this.shareToken = shareToken;
         this.description = description;
         this.dateAchieved = dateAchieved;
     }
@@ -24,12 +24,12 @@ public class Milestone {
         this.milestoneId = milestoneId;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getShareToken() {
+        return shareToken;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setShareToken(String shareToken) {
+        this.shareToken = shareToken;
     }
 
     public String getDescription() {
