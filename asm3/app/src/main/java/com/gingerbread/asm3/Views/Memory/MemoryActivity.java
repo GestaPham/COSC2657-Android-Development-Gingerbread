@@ -2,6 +2,7 @@ package com.gingerbread.asm3.Views.Memory;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,17 +29,22 @@ public class MemoryActivity extends AppCompatActivity {
     private FirebaseFirestore firestore;
     private UserService userService;
     private List<Memory> memoryList = new ArrayList<>();
-    private Intent allMemoryIntent = getIntent();
-    private String memoriesJson = allMemoryIntent.getStringExtra("memoriesJson");
+    private Intent allMemoryIntent;
+    private String memoriesJson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_memory);
         recyclerView =findViewById(R.id.all_memories_recycler);
+        allMemoryIntent = getIntent();
+        memoriesJson = allMemoryIntent.getStringExtra("memoriesJson");
         if(memoriesJson!=null){
             Type listType = new TypeToken<ArrayList<Memory>>() {}.getType();
             memoryList = new Gson().fromJson(memoriesJson,listType);
+            for (Memory memory : memoryList) {
+                Log.d("Memory", "Name: " + memory.getMemoryName() + ", Note: " + memory.getNote());
+            }
         }
         memoryAdapter = new MemoryAdapter(memoryList,memory -> {
 

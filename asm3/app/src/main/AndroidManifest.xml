@@ -20,8 +20,10 @@
         tools:targetApi="31">
         <activity
             android:name=".Views.Memory.MemoryActivity"
-            android:name=".Views.Support.HelpCenterActivity"
+
             android:exported="false" />
+        <activity android:name=".Views.Support.HelpCenterActivity"
+            android:exported="false"/>
         <activity
             android:name=".Views.MoodTracker.MoodTrackerActivity"
             android:exported="false" />

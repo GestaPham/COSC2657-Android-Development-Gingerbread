@@ -59,8 +59,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         calendarView = findViewById(R.id.calendarView);
-        //addEventButton = findViewById(R.id.addEventButton);
-        //addMemoryButton = findViewById(R.id.addMemoryButton);
+        addEventButton2 =findViewById(R.id.addEventButton2);
         addMemoryButton2 = findViewById(R.id.addMemoryButton2);
         viewAll = findViewById(R.id.viewAllLink);
         selectedDate = calendarView.getDate();
@@ -73,11 +72,10 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
             }
         });
 
-        addEventButton.setOnClickListener(v -> addEvent());
+        addEventButton2.setOnClickListener(v -> addEvent());
         //addMemoryButton.setOnClickListener(v -> addMemory());
         addMemoryButton2.setOnClickListener(v->addMemory());
         viewAll.setOnClickListener(v->{
-
             fetchUsersMemories(currentUser.getUid());
             String memoriesJson = gson.toJson(userMemories);
             Intent intent = new Intent(CalendarActivity.this, MemoryActivity.class);
@@ -104,14 +102,8 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         }
     }
     private void addMemory() {
-        new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                AddMemoryBottomSheetDialog addMemoryBottomSheetDialog = new AddMemoryBottomSheetDialog();
-                addMemoryBottomSheetDialog.show(getSupportFragmentManager(),"AddMemoryBottomSheet");
-
-            }
-        };
+        AddMemoryBottomSheetDialog addMemoryBottomSheetDialog = new AddMemoryBottomSheetDialog();
+        addMemoryBottomSheetDialog.show(getSupportFragmentManager(),"AddMemoryBottomSheet");
     }
 
     private void fetchUsersMemories(String currentUserId){

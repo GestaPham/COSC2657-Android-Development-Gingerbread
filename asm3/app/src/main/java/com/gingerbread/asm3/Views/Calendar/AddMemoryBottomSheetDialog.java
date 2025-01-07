@@ -38,7 +38,7 @@ public class AddMemoryBottomSheetDialog extends BottomSheetDialogFragment {
         EditText noteInput = v.findViewById(R.id.noteInput);
         EditText memoryNameInput = v.findViewById(R.id.memoryNameInput);
         ImageButton addPhotoButton = v.findViewById(R.id.addPhotoButton);
-        Button addMemoryButton = v.findViewById(R.id.addMemoryButton);
+        Button addMemoryButton = v.findViewById(R.id.buttonAddMemoryModal);
         addPhotoButton.setOnClickListener(view->{
             openImagePicker();
         });
@@ -80,7 +80,8 @@ public class AddMemoryBottomSheetDialog extends BottomSheetDialogFragment {
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE_REQ && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            imageUri = data.getData(); // This is the URI of the selected image
+            imageUri = data.getData();
+            uploadImageToCloudStorage();
         }
     }
     private void uploadImageToCloudStorage(){
