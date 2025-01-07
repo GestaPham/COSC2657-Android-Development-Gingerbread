@@ -1,6 +1,7 @@
 package com.gingerbread.asm3.Views.Calendar;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract;
 import android.util.Log;
@@ -19,8 +20,10 @@ import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import com.gingerbread.asm3.Services.CalendarService;
+import com.gingerbread.asm3.Views.Memory.MemoryActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -43,8 +46,11 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private MemoryAdapter memoryAdapter;
     private HashMap<Long, List<String>> eventsMap = new HashMap<>();
     private HashMap<String, Memory> memoryHashMap = new HashMap<>();
+    private List<Memory> userMemories = new ArrayList<>();
     private CalendarService calendarService = new CalendarService();
     private TextView viewAll;
+    Gson gson = new Gson();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +81,13 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         //addMemoryButton.setOnClickListener(v -> addMemory());
         addMemoryButton2.setOnClickListener(v->addMemory());
         viewAll.setOnClickListener(v->{
+
             fetchUsersMemories(currentUser.getUid());
+            String memoriesJson = gson.toJson(userMemories);
+            Intent intent = new Intent(CalendarActivity.this, MemoryActivity.class);
+            intent.putExtra("memoriesJson",memoriesJson);
+            startActivity(intent);
+
         });
         fetchEventsForDate(selectedDate);
     }
@@ -118,7 +130,8 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
             @Override
             public void onMemoriesFetched(List<Memory> memories) {
-                //Intent intent = new Intent()
+                userMemories = memories;
+
             }
         });
 
@@ -133,37 +146,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         newMemory.setUserId(userId);
         newMemory.setRelationshipId(relationshipId);
         calendarService.addMemory(newMemory,this);
-    }
-
-    private void initializeMemoryRecycler(){
-        try {
-            InputStream is = getAssets().open("mock_memories.json");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-
-            String json = new String(buffer, "UTF-8");
-            JSONObject jsonObject = new JSONObject(json);
-            JSONArray memoryArray = jsonObject.getJSONArray("memories");
-
-            List<Memory> memories = new ArrayList<>();
-            for (int i = 0; i < memoryArray.length(); i++) {
-                JSONObject obj = memoryArray.getJSONObject(i);
-
-                memories.add(new Memory(obj.getString("memoryId"), obj.getString("memoryName"), obj.getString("date"), obj.getString("note"), obj.getString("imageUrl"), obj.optString("userId", "defaultUserId"), obj.optString("relationshipId", "defaultRelationshipId")));
-            }
-
-            memoryAdapter = new MemoryAdapter(memories, memory -> {
-
-            });
-
-            viewPagerMemories.setAdapter(memoryAdapter);
-            viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-
-        } catch (Exception e) {
-            Toast.makeText(this, "Error loading memories: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
     }
     @Override
     protected int getLayoutId() {
