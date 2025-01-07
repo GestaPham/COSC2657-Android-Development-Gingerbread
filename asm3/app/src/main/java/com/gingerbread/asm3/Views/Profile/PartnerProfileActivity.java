@@ -68,7 +68,7 @@ public class PartnerProfileActivity extends BaseActivity {
         contentLayout = findViewById(R.id.contentLayout);
 
         ImageButton buttonBack = findViewById(R.id.buttonBack);
-        buttonBack.setOnClickListener(v -> onBackPressed());
+        buttonBack.setOnClickListener(v -> finish());
 
         userService = new UserService();
         loadCurrentUser();
