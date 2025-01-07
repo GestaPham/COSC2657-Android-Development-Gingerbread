@@ -2,8 +2,7 @@ package com.gingerbread.asm3.Models;
 
 public class Relationship {
     private String relationshipId;
-    private String userId1;
-    private String userId2;
+    private String shareToken;
     private String startDate;
     private int daysTogether;
     private String relationshipStatus;
@@ -11,10 +10,9 @@ public class Relationship {
     public Relationship() {
     }
 
-    public Relationship(String relationshipId, String userId1, String userId2, String startDate, int daysTogether, String relationshipStatus) {
+    public Relationship(String relationshipId, String shareToken, String startDate, int daysTogether, String relationshipStatus) {
         this.relationshipId = relationshipId;
-        this.userId1 = userId1;
-        this.userId2 = userId2;
+        this.shareToken = shareToken;
         this.startDate = startDate;
         this.daysTogether = daysTogether;
         this.relationshipStatus = relationshipStatus;
@@ -28,20 +26,12 @@ public class Relationship {
         this.relationshipId = relationshipId;
     }
 
-    public String getUserId1() {
-        return userId1;
+    public String getShareToken() {
+        return shareToken;
     }
 
-    public void setUserId1(String userId1) {
-        this.userId1 = userId1;
-    }
-
-    public String getUserId2() {
-        return userId2;
-    }
-
-    public void setUserId2(String userId2) {
-        this.userId2 = userId2;
+    public void setShareToken(String shareToken) {
+        this.shareToken = shareToken;
     }
 
     public String getStartDate() {
@@ -68,4 +58,3 @@ public class Relationship {
         this.relationshipStatus = relationshipStatus;
     }
 }
-
