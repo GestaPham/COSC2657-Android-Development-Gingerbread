@@ -53,11 +53,15 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         calendarView = findViewById(R.id.calendarView);
-        //addEventButton = findViewById(R.id.addEventButton);
+        addEventButton = findViewById(R.id.addEventButton);
         //addMemoryButton = findViewById(R.id.addMemoryButton);
         addMemoryButton2 = findViewById(R.id.addMemoryButton2);
         viewAll = findViewById(R.id.viewAllLink);
         selectedDate = calendarView.getDate();
+
+        recyclerViewEvents.setLayoutManager(new LinearLayoutManager(this));
+        eventAdapter = new EventAdapter(eventList);
+        recyclerViewEvents.setAdapter(eventAdapter);
 
         calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
@@ -73,6 +77,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         viewAll.setOnClickListener(v->{
             fetchUsersMemories(currentUser.getUid());
         });
+        fetchEventsForDate(selectedDate);
     }
 
     private void addEvent() {

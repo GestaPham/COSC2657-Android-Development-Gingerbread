@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textViewNewEvent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="New Event"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/textViewEventName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Event Name"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/eventNameInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter event name"
+        android:inputType="text"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/textViewEventDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Date of Event"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/eventDateInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter date (day/month/year)"
+        android:inputType="text"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/textViewRemind"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Remind"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <Spinner
+        android:id="@+id/spinnerReminder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/textViewAddNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Note"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/noteInputEvent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter event note (Optional)"
+        android:inputType="text"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/buttonAdd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Create"
+        android:backgroundTint="@color/light_pink"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>

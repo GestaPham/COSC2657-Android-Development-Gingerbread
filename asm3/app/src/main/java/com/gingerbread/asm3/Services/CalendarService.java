@@ -13,7 +13,9 @@ import java.util.List;
 
 public class CalendarService {
     private final CollectionReference memoriesCollection;
+    private final CollectionReference eventsCollection;
     private FirebaseFirestore firestore;
+    CalendarService calendarService = new CalendarService();
 
     public CalendarService() {
         firestore = FirebaseFirestore.getInstance();
@@ -64,6 +66,50 @@ public class CalendarService {
     public interface UsersMemoriesCallback {
         void onError(Exception e);
         void onMemoriesFetched(List<Memory> memories);
+    }
+    public void getAllEvents(String userId, EventsCallback callback) {
+        eventsCollection.whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Event> eventList = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Event event = document.toObject(Event.class);
+                        event.setEventId(document.getId());
+                        eventList.add(event);
+                    }
+                    callback.onSuccess(eventList);
+                })
+                .addOnFailureListener(e -> callback.onFailure(e.getMessage()));
+    }
+
+    public void addEvent(Event event, Context context) {
+        Toast toast = new Toast(context);
+        eventsCollection.add(event)
+                .addOnSuccessListener(documentReference -> {
+                    event.setEventId(documentReference.getId());
+                    toast.setText("Event added successfully!");
+                    toast.setDuration(Toast.LENGTH_SHORT);
+                    toast.show();
+                })
+                .addOnFailureListener(e -> {
+                    toast.setText("Failed to add event.");
+                    toast.setDuration(Toast.LENGTH_SHORT);
+                    toast.show();
+                });
+    }
+
+    public void updateEvent(String eventId, String field, Object value, Context context) {
+        eventsCollection.document(eventId)
+                .update(field, value)
+                .addOnSuccessListener(aVoid -> Toast.makeText(context, "Event updated!", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(context, "Failed to update event.", Toast.LENGTH_SHORT).show());
+    }
+
+    public void deleteEvent(String eventId, Context context) {
+        eventsCollection.document(eventId)
+                .delete()
+                .addOnSuccessListener(aVoid -> Toast.makeText(context, "Event deleted!", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(context, "Failed to delete event.", Toast.LENGTH_SHORT).show());
     }
 
 
