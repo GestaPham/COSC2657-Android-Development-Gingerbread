@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -43,6 +44,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private HashMap<Long, List<String>> eventsMap = new HashMap<>();
     private HashMap<String, Memory> memoryHashMap = new HashMap<>();
     private CalendarService calendarService = new CalendarService();
+    private TextView viewAll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +56,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         //addEventButton = findViewById(R.id.addEventButton);
         //addMemoryButton = findViewById(R.id.addMemoryButton);
         addMemoryButton2 = findViewById(R.id.addMemoryButton2);
-
+        viewAll = findViewById(R.id.viewAllLink);
         selectedDate = calendarView.getDate();
 
         calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
@@ -68,6 +70,9 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         addEventButton.setOnClickListener(v -> addEvent());
         //addMemoryButton.setOnClickListener(v -> addMemory());
         addMemoryButton2.setOnClickListener(v->addMemory());
+        viewAll.setOnClickListener(v->{
+            fetchUsersMemories(currentUser.getUid());
+        });
     }
 
     private void addEvent() {
@@ -108,7 +113,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
             @Override
             public void onMemoriesFetched(List<Memory> memories) {
-
+                //Intent intent = new Intent()
             }
         });
 
