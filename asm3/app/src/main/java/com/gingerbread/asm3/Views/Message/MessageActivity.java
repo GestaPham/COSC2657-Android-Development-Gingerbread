@@ -103,9 +103,7 @@ public class MessageActivity extends BaseActivity {
     }
 
     private void showNoPartnerMessage() {
-        findViewById(R.id.layoutNoPartner).setVisibility(View.VISIBLE);
-        findViewById(R.id.layoutChat).setVisibility(View.GONE);
-        textViewPartnerName.setVisibility(View.GONE);
+        getLayoutInflater().inflate(R.layout.item_no_partner, findViewById(R.id.activity_content));
     }
 
     private void loadChat() {
