@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CalendarView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,6 +34,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
     private CalendarView calendarView;
     private Button addEventButton, addMemoryButton;
+    private ImageButton addMemoryButton2,addEventButton2;
     private long selectedDate;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
@@ -49,8 +51,9 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         calendarView = findViewById(R.id.calendarView);
-        addEventButton = findViewById(R.id.addEventButton);
-        addMemoryButton = findViewById(R.id.addMemoryButton);
+        //addEventButton = findViewById(R.id.addEventButton);
+        //addMemoryButton = findViewById(R.id.addMemoryButton);
+        addMemoryButton2 = findViewById(R.id.addMemoryButton2);
 
         selectedDate = calendarView.getDate();
 
@@ -63,7 +66,8 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         });
 
         addEventButton.setOnClickListener(v -> addEvent());
-        addMemoryButton.setOnClickListener(v -> addMemory());
+        //addMemoryButton.setOnClickListener(v -> addMemory());
+        addMemoryButton2.setOnClickListener(v->addMemory());
     }
 
     private void addEvent() {
