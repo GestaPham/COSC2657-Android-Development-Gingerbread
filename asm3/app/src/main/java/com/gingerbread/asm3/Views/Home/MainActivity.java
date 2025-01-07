@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -19,14 +20,19 @@ import com.bumptech.glide.Glide;
 import com.gingerbread.asm3.Adapter.MemoryAdapter;
 import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.Models.MoodLog;
+import com.gingerbread.asm3.Models.Relationship;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.MilestoneService;
+import com.gingerbread.asm3.Services.MoodService;
+import com.gingerbread.asm3.Services.RelationshipService;
+import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import com.gingerbread.asm3.Views.MoodTracker.MoodTrackerActivity;
 import com.gingerbread.asm3.Views.Notification.NotificationActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,6 +44,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends BaseActivity {
 
@@ -47,6 +54,15 @@ public class MainActivity extends BaseActivity {
     private MemoryAdapter memoryAdapter;
     private FirebaseFirestore firestore;
     private FirebaseAuth auth;
+
+    private User user;
+    private UserService userService;
+
+    private Relationship relationship;
+    private RelationshipService relationshipService;
+
+    private MoodService moodService;
+    private MilestoneService milestoneService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,10 +87,12 @@ public class MainActivity extends BaseActivity {
         firestore = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
-        loadMockData();
-        fetchUserData();
-        initializeMoodTracking();
-        initializeMemoryCarousel();
+        userService = new UserService();
+        relationshipService = new RelationshipService();
+        milestoneService = new MilestoneService();
+        moodService = new MoodService();
+
+        fetchData();
 
         notificationIcon.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
@@ -99,53 +117,115 @@ public class MainActivity extends BaseActivity {
         return R.id.nav_home;
     }
 
-    private void fetchUserData() {
-        String userId = auth.getCurrentUser().getUid();
+    private void fetchData() {
+        String userId = userService.getCurrentUserId();
 
-        firestore.collection("users").document(userId).get().addOnSuccessListener(documentSnapshot -> {
-            if (documentSnapshot.exists()) {
-                User user = documentSnapshot.toObject(User.class);
+        if (userId == null) {
+            Toast.makeText(this, "User is not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-                if (user != null) {
-                    textViewGreeting.setText("Hi, " + user.getName());
+        userService.getUser(userId, new UserService.UserCallback() {
+            @Override
+            public void onSuccess(Map<String, Object> userData) {
+                user = new Gson().fromJson(new Gson().toJson(userData), User.class);
 
-                    if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
-                        Glide.with(this).load(user.getProfilePictureUrl()).placeholder(R.drawable.ic_placeholder).into(imageViewProfile);
-                    } else {
-                        imageViewProfile.setImageResource(R.drawable.ic_placeholder);
-                    }
+                String userShareToken = user.getShareToken();
+
+                displayUserDetails();
+
+                if (userShareToken != null && userShareToken.startsWith("LINKED")) {
+                    loadDateTogetherStats();
+                    initializeMoodTracking();
+                    initializeMemoryCarousel();
+                } else {
+                    displayNoPartnerMessage();
                 }
-            } else {
-                Toast.makeText(this, "User data not found", Toast.LENGTH_SHORT).show();
             }
-        }).addOnFailureListener(e -> {
-            Toast.makeText(this, "Error fetching user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(MainActivity.this, "Error fetching user data: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
-    private void loadMockData() {
-        try {
-            InputStream is = getAssets().open("mock_together_stats.json");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-            String json = new String(buffer, "UTF-8");
+    private void displayNoPartnerMessage() {
+        getLayoutInflater().inflate(R.layout.item_no_partner, findViewById(R.id.activity_content));
+    }
 
-            JSONObject jsonObject = new JSONObject(json);
-            JSONObject statsObject = jsonObject.getJSONObject("togetherStats");
+    private void displayUserDetails() {
+        if (user != null) {
+            textViewGreeting.setText("Hi, " + user.getName());
 
-            int years = statsObject.getInt("years");
-            int months = statsObject.getInt("months");
-            int days = statsObject.getInt("days");
-
-            textViewTogetherYears.setText(String.valueOf(years));
-            textViewTogetherMonths.setText(String.valueOf(months));
-            textViewTogetherDays.setText(String.valueOf(days));
-
-        } catch (Exception e) {
-            Toast.makeText(this, "Error loading mock data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
+                Glide.with(this)
+                        .load(user.getProfilePictureUrl())
+                        .placeholder(R.drawable.ic_placeholder)
+                        .into(imageViewProfile);
+            } else {
+                imageViewProfile.setImageResource(R.drawable.ic_placeholder);
+            }
         }
+    }
+
+    private void loadDateTogetherStats() {
+        if (user.getShareToken() == null || user.getShareToken().isEmpty()) {
+            Toast.makeText(this, "No linked relationship found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        relationshipService.getRelationshipByShareToken(user.getShareToken(), new RelationshipService.RelationshipCallback() {
+            @Override
+            public void onSuccess(Relationship relationship) {
+                if (relationship != null) {
+                    displayDaysTogether(relationship.getDaysTogether());
+                } else {
+                    createRelationship();
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.d("RelationshipService", "Fetching relationship for shareToken: " + user.getShareToken());
+
+                Toast.makeText(MainActivity.this, "Error fetching relationship stats: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void createRelationship() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String currentDate = sdf.format(new Date());
+
+        Relationship newRelationship = new Relationship();
+        newRelationship.setShareToken(user.getShareToken());
+        newRelationship.setStartDate(currentDate);
+        newRelationship.setDaysTogether(1);
+        newRelationship.setRelationshipStatus("Active");
+
+        relationshipService.createRelationship(newRelationship, new RelationshipService.RelationshipCallback() {
+            @Override
+            public void onSuccess(Relationship relationship) {
+                displayDaysTogether(relationship.getDaysTogether());
+                Toast.makeText(MainActivity.this, "Relationship created successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(MainActivity.this, "Error creating relationship: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void displayDaysTogether(int daysTogether) {
+        int years = daysTogether / 365;
+        int months = (daysTogether % 365) / 30;
+        int days = (daysTogether % 365) % 30;
+
+        textViewTogetherYears.setText(String.valueOf(years));
+        textViewTogetherMonths.setText(String.valueOf(months));
+        textViewTogetherDays.setText(String.valueOf(days));
     }
 
     private void initializeMoodTracking() {
@@ -159,40 +239,39 @@ public class MainActivity extends BaseActivity {
     }
 
     private void fetchLatestMoodLog() {
-        String userId = auth.getCurrentUser().getUid();
+        String userId = user.getUserId();
 
-        firestore.collection("mood_logs").whereEqualTo("userId", userId).orderBy("date", Query.Direction.DESCENDING).limit(1).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            if (!queryDocumentSnapshots.isEmpty()) {
-                MoodLog latestMoodLog = queryDocumentSnapshots.toObjects(MoodLog.class).get(0);
-
-                // Check if the mood was logged for today or reset at 6 AM
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-                String lastLoggedDate = latestMoodLog.getDate();
-
-                Calendar calendar = Calendar.getInstance();
-                Calendar resetCalendar = Calendar.getInstance();
-                resetCalendar.set(Calendar.HOUR_OF_DAY, 6);
-                resetCalendar.set(Calendar.MINUTE, 0);
-                resetCalendar.set(Calendar.SECOND, 0);
-
-                Date now = calendar.getTime();
-                Date resetTime = resetCalendar.getTime();
-
+        moodService.getLatestMoodLog(userId, new MoodService.MoodLogCallback() {
+            @Override
+            public void onSuccess(MoodLog latestMoodLog) {
                 try {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                    String lastLoggedDate = latestMoodLog.getDate();
+
+                    Calendar calendar = Calendar.getInstance();
+                    Calendar resetCalendar = Calendar.getInstance();
+                    resetCalendar.set(Calendar.HOUR_OF_DAY, 6);
+                    resetCalendar.set(Calendar.MINUTE, 0);
+                    resetCalendar.set(Calendar.SECOND, 0);
+
+                    Date now = calendar.getTime();
+                    Date resetTime = resetCalendar.getTime();
                     Date lastLogDate = dateFormat.parse(lastLoggedDate);
+
                     if (now.after(resetTime) && (lastLogDate.before(resetTime) || !isSameDay(lastLogDate, now))) {
                         enableMoodSelection();
                     } else {
                         disableMoodSelection(latestMoodLog);
                     }
                 } catch (Exception e) {
-                    Toast.makeText(this, "Failed to parse date: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Failed to parse date: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-            } else {
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
                 enableMoodSelection();
             }
-        }).addOnFailureListener(e -> {
-            Toast.makeText(this, "Failed to fetch mood log: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
 

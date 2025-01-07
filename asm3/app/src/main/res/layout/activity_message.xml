@@ -16,7 +16,7 @@
         android:padding="16dp"
         android:gravity="center"
         android:background="@color/light_pink"
-        android:text="Partner Name"
+        android:text=""
         android:textAppearance="?attr/textAppearanceHeadline6"
         android:textColor="@android:color/white"
         app:layout_constraintTop_toTopOf="parent"

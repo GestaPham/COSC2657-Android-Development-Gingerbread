@@ -1,0 +1,50 @@
+[
+  {
+    "question": "How do I manage my notifications?",
+    "answer": "Navigate to the settings menu by tapping the bell icon in home screen. Here you can check all and 'Read' notifications"
+  },
+  {
+    "question": "How do I edit my profile information?",
+    "answer": "Go to the 'Profile Details' section from the Profile screen. Tap on edit profile, make changes, and save."
+  },
+  {
+    "question": "How can I message my partner",
+    "answer": "To message your partner you must first link with them through the 'My Parner' section in the 'Profile' screen"
+  },
+  {
+    "question": "How do I invite my partner?",
+    "answer": "Go to the 'My Partner' section and share the unique invitation link with your partner to connect their profile."
+  },
+  {
+    "question": "How do I add a new event to the calendar?",
+    "answer": "Navigate to the 'Calendar' section. Tap the '+' icon or 'New Event,' fill in the event details, and save."
+  },
+  {
+    "question": "Can I track my mood daily?",
+    "answer": "Yes! Use the 'Mood Tracker' to log how you feel daily. You can select a mood icon and then go to the 'Mood Tracker' screen to view your current mood and timeline"
+  },
+  {
+    "question": "What should I do if I encounter a bug or issue?",
+    "answer": "Go to the 'Help Center' section in the app in 'Profile' screen. Navigate to 'Contact Us' tab and submit your issue along with a screenshot or detailed description to our email!"
+  },
+  {
+    "question": "How do I create a new memory?",
+    "answer": "Navigate to the 'Memories' tab, tap 'Add New Memory,' upload a photo, and add a name, date, and description before saving."
+  },
+  {
+    "question": "What is the 'Together Timer' feature?",
+    "answer": "The Together Timer tracks the duration of your relationship. It updates daily and can be viewed on the home screen."
+  },
+  {
+    "question": "Can I customize my app's appearance?",
+    "answer": "Currently, the app supports light mode with soft pastel themes. Customization features may be added in future updates."
+  },
+  {
+    "question": "How is my data protected?",
+    "answer": "Your data is encrypted and securely stored. We do not share your information with third parties without your consent."
+  },
+  {
+    "question": "Are my conversations private?",
+    "answer": "Yes, all chat messages are end-to-end encrypted to ensure your privacy."
+  }
+]

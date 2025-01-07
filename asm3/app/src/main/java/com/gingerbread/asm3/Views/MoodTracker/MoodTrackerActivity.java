@@ -70,7 +70,7 @@ public class MoodTrackerActivity extends AppCompatActivity {
         dateSunday = findViewById(R.id.dateSunday);
 
         ImageButton buttonBack = findViewById(R.id.buttonBack);
-        buttonBack.setOnClickListener(v -> onBackPressed());
+        buttonBack.setOnClickListener(v -> finish());
 
         loadMoodData();
     }
