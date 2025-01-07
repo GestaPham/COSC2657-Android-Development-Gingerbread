@@ -41,6 +41,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private long selectedDate;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
+    private ViewPager2 viewPagerMemories;
     private MemoryAdapter memoryAdapter;
     private HashMap<Long, List<String>> eventsMap = new HashMap<>();
     private HashMap<String, Memory> memoryHashMap = new HashMap<>();
@@ -57,10 +58,14 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         calendarView = findViewById(R.id.calendarView);
-        addEventButton2 =findViewById(R.id.addEventButton2);
+        addEventButton2 = findViewById(R.id.addEventButton2);
         addMemoryButton2 = findViewById(R.id.addMemoryButton2);
         viewAll = findViewById(R.id.viewAllLink);
         selectedDate = calendarView.getDate();
+
+        recyclerViewEvents.setLayoutManager(new LinearLayoutManager(this));
+        eventAdapter = new EventAdapter(eventList);
+        recyclerViewEvents.setAdapter(eventAdapter);
 
         calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
@@ -71,7 +76,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         });
 
         addEventButton2.setOnClickListener(v -> addEvent());
-        //addMemoryButton.setOnClickListener(v -> addMemory());
+
         addMemoryButton2.setOnClickListener(v->addMemory());
         viewAll.setOnClickListener(v->{
             fetchUsersMemories(currentUser.getUid());
@@ -81,6 +86,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
             startActivity(intent);
 
         });
+        fetchEventsForDate(selectedDate);
     }
 
     private void addEvent() {
@@ -132,7 +138,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         newMemory.setUserId(userId);
         newMemory.setRelationshipId(relationshipId);
         calendarService.addMemory(newMemory,this);
-
     }
     @Override
     protected int getLayoutId() {
@@ -146,7 +151,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
     @Override
     public void onMemoryAdded(String name, String note, String date, String imageUrl) {
-        Log.d("CurrentUserID",currentUser.getUid());
         addNewMemory(name,note, date,imageUrl, currentUser.getUid(),"");
     }
 
