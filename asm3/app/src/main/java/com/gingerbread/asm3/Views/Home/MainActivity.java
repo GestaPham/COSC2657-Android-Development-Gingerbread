@@ -130,6 +130,7 @@ public class MainActivity extends BaseActivity {
                 user = new Gson().fromJson(new Gson().toJson(userData), User.class);
 
                 displayUserDetails();
+
                 loadDateTogetherStats();
                 initializeMoodTracking();
                 initializeMemoryCarousel();
