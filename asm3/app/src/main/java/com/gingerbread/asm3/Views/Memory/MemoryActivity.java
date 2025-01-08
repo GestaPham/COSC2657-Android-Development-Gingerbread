@@ -2,14 +2,15 @@ package com.gingerbread.asm3.Views.Memory;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.gingerbread.asm3.Adapter.MemoryAdapter;
 import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.R;
 import com.google.gson.Gson;
@@ -20,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MemoryActivity extends AppCompatActivity {
-    private RecyclerView recyclerView;
-    private MemoryAdapter memoryAdapter;
+    private LinearLayout memoryContainer;
+    private TextView noMemoriesText;
     private List<Memory> memoryList = new ArrayList<>();
     private String memoriesJson;
 
@@ -33,28 +34,47 @@ public class MemoryActivity extends AppCompatActivity {
         ImageButton buttonBack = findViewById(R.id.buttonBack);
         buttonBack.setOnClickListener(v -> finish());
 
-        recyclerView = findViewById(R.id.all_memories_recycler);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(memoryAdapter);
+        memoryContainer = findViewById(R.id.memoryContainer);
+        noMemoriesText = findViewById(R.id.noMemoriesText);
 
         Intent intent = getIntent();
         memoriesJson = intent.getStringExtra("memoriesJson");
 
         if (memoriesJson != null) {
-            Type listType = new TypeToken<ArrayList<Memory>>() {}.getType();
+            Type listType = new TypeToken<ArrayList<Memory>>() {
+            }.getType();
             memoryList = new Gson().fromJson(memoriesJson, listType);
         }
 
-        memoryAdapter = new MemoryAdapter(memoryList, memory -> {
-            Toast.makeText(this, "Clicked on: " + memory.getMemoryName(), Toast.LENGTH_SHORT).show();
-        });
-        recyclerView.setAdapter(memoryAdapter);
+        if (memoryList.isEmpty()) {
+            noMemoriesText.setVisibility(View.VISIBLE);
+        } else {
+            noMemoriesText.setVisibility(View.GONE);
+            displayMemories();
+        }
+    }
 
-        recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
-            @Override
-            public void getItemOffsets(android.graphics.Rect outRect, android.view.View view, RecyclerView parent, RecyclerView.State state) {
-                outRect.set(0, 0, 0, 16);
-            }
-        });
+    private void displayMemories() {
+        for (Memory memory : memoryList) {
+            View cardView = LayoutInflater.from(this).inflate(R.layout.memory_card, memoryContainer, false);
+
+            TextView textMemoryTitle = cardView.findViewById(R.id.textMemoryTitle);
+            TextView textMemoryDate = cardView.findViewById(R.id.textMemoryDate);
+            TextView textMemoryNote = cardView.findViewById(R.id.textMemoryNote);
+
+            textMemoryTitle.setText(memory.getMemoryName());
+            textMemoryDate.setText(memory.getDate());
+            textMemoryNote.setText(memory.getNote());
+
+            cardView.setOnClickListener(v -> {
+                Toast.makeText(this, "Clicked on: " + memory.getMemoryName(), Toast.LENGTH_SHORT).show();
+            });
+
+            memoryContainer.addView(cardView);
+
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) cardView.getLayoutParams();
+            params.setMargins(0, 0, 0, 16);
+            cardView.setLayoutParams(params);
+        }
     }
 }
