@@ -13,11 +13,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.gingerbread.asm3.Models.MoodLog;
 import com.gingerbread.asm3.R;
+import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -241,14 +243,32 @@ public class MoodTrackerActivity extends AppCompatActivity {
         }
 
         PieDataSet pieDataSet = new PieDataSet(pieEntries, "");
-        pieDataSet.setColors(new int[]{Color.parseColor("#FF8A80"), // Excited
+        pieDataSet.setColors(new int[]{
+                Color.parseColor("#FF8A80"), // Excited
                 Color.parseColor("#FFD180"), // Happy
                 Color.parseColor("#FFECB3"), // Okay
                 Color.parseColor("#80CBC4"), // Tired
                 Color.parseColor("#90CAF9")  // Bad
         });
+        pieDataSet.setSliceSpace(3f);
+        pieDataSet.setValueFormatter(new PercentFormatter(moodPieChart));
+        pieDataSet.setValueTextSize(12f);
+        pieDataSet.setValueTextColor(Color.BLACK);
+
         PieData pieData = new PieData(pieDataSet);
         moodPieChart.setData(pieData);
+
+        moodPieChart.getLegend().setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+        moodPieChart.getLegend().setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+        moodPieChart.getLegend().setOrientation(Legend.LegendOrientation.HORIZONTAL);
+        moodPieChart.getLegend().setDrawInside(false);
+        moodPieChart.getLegend().setXEntrySpace(10f);
+        moodPieChart.getLegend().setYEntrySpace(5f);
+
+        moodPieChart.getDescription().setEnabled(false);
+
+        moodPieChart.setUsePercentValues(true);
+
         moodPieChart.invalidate();
 
         String mostFrequentMood = getMostFrequentMood(moodCounts);
