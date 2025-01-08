@@ -92,6 +92,13 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp" />
 
+        <ProgressBar
+            android:id="@+id/uploadProgressBar"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/buttonAddMemoryModal"
             android:layout_width="match_parent"
