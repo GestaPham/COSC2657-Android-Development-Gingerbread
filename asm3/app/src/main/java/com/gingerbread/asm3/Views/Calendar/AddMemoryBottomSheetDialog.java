@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -54,12 +55,17 @@ public class AddMemoryBottomSheetDialog extends BottomSheetDialogFragment {
             openImagePicker();
         });
         addMemoryButton.setOnClickListener(view->{
-            String date = dateInput.getText().toString();
-            String note = noteInput.getText().toString();
-            String name = memoryNameInput.getText().toString();
+            if (imageUri != null && (uploadedImageUrl == null || uploadedImageUrl.isEmpty())) {
+                Toast.makeText(getContext(), "Please wait for the image upload to finish.", Toast.LENGTH_SHORT).show();
+            } else {
 
-            listener.onMemoryAdded(name, note, date,uploadedImageUrl);
-            dismiss();
+                String date = dateInput.getText().toString();
+                String note = noteInput.getText().toString();
+                String name = memoryNameInput.getText().toString();
+
+                listener.onMemoryAdded(name, note, date, uploadedImageUrl != null ? uploadedImageUrl : "");
+                dismiss();
+            }
         });
         return v;
     }
@@ -90,61 +96,45 @@ public class AddMemoryBottomSheetDialog extends BottomSheetDialogFragment {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE_REQ && resultCode == RESULT_OK && data != null && data.getData() != null) {
             imageUri = data.getData();
-            Log.d("image uri",imageUri.toString());
-            uploadImageToCloudStorage();
+            Log.d("image uri", imageUri.toString());
+            uploadImageToCloudStorage(imageUrl -> {
+                uploadedImageUrl = imageUrl;
+                Log.d("Firebase", "Uploaded URL is ready: " + uploadedImageUrl);
+            });
         }
     }
-    private void uploadImageToCloudStorage(){
-        if(imageUri != null){
+
+    private void uploadImageToCloudStorage(ImageUploadListener listener) {
+        if (imageUri != null) {
             FirebaseStorage storage = FirebaseStorage.getInstance();
             StorageReference storageRef = storage.getReference();
 
             String uniqueFileName = "images/" + System.currentTimeMillis() + "_" + imageUri.getLastPathSegment();
             StorageReference fileRef = storageRef.child(uniqueFileName);
 
-            try{
+            try {
                 InputStream inputStream = requireActivity().getContentResolver().openInputStream(imageUri);
-                Log.d("fileRefPath",fileRef.getPath());
                 if (inputStream != null) {
-                    UploadTask uploadTask;
-                    uploadTask = fileRef.putStream(inputStream);
-                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                    fileRef.getDownloadUrl().addOnSuccessListener(uri->{
-                                        String uploadedImageUrl = uri.toString();
-                                        Log.d("Firebase", "File uploaded successfully. URL: " + uploadedImageUrl);
-                                    });
-                                }
-                            })
-                            .addOnFailureListener(e->{
-                                Log.e("Firebase", "File upload failed: " + e.getMessage());
-                            });
+                    UploadTask uploadTask = fileRef.putStream(inputStream);
+                    uploadTask.addOnSuccessListener(taskSnapshot -> {
+                        fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                           String uploadedImageUri = uri.toString();
+                            Log.d("Firebase", "File uploaded successfully. URL: " + uploadedImageUri);
+
+                            listener.onImageUploaded(uploadedImageUri);
+                        });
+                    }).addOnFailureListener(e -> {
+                        Log.e("Firebase", "File upload failed: " + e.getMessage());
+                    });
                 }
-            }catch (FileNotFoundException e){
+            } catch (FileNotFoundException e) {
                 Log.e("Firebase", "File not found: " + e.getMessage());
             }
-        }else{
-
         }
     }
+
+    public interface ImageUploadListener {
+        void onImageUploaded(String imageUrl);
+    }
+
 }
-   /*
-            fileRef.putFile(imageUri)
-                    .addOnSuccessListener(taskSnapshot->{
-                        fileRef.getDownloadUrl().addOnSuccessListener(uri->{
-                            uploadedImageUrl =uri.toString();
-                        });
-                    }).addOnFailureListener(e->{});*/
-             /*
-                    fileRef.putStream(inputStream)
-                            .addOnSuccessListener(taskSnapshot -> {
-                                fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                                    uploadedImageUrl = uri.toString();
-                                    Log.d("Firebase", "File uploaded successfully. URL: " + uploadedImageUrl);
-                                });
-                            })
-                            .addOnFailureListener(e -> {
-                                Log.e("Firebase", "File upload failed: " + e.getMessage());
-                                ;
-                            });*/
