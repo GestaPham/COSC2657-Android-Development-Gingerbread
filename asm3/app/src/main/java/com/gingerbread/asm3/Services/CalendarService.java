@@ -19,13 +19,14 @@ public class CalendarService {
     private final CollectionReference memoriesCollection;
     private final CollectionReference eventsCollection;
     private FirebaseFirestore firestore;
-    CalendarService calendarService = new CalendarService();
 
 
     public CalendarService() {
         firestore = FirebaseFirestore.getInstance();
         this.memoriesCollection = firestore.collection("memories");
+        this.eventsCollection = firestore.collection("events");
     }
+
     public void getAllMemories(String userId, UsersMemoriesCallback callback){
         firestore.collection("memories").get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -71,6 +72,13 @@ public class CalendarService {
         void onError(Exception e);
         void onMemoriesFetched(List<Memory> memories);
     }
+
+    public interface EventsCallback {
+        void onSuccess(List<Event> events);
+        void onFailure(String errorMessage);
+    }
+
+
     public void getAllEvents(String userId, EventsCallback callback) {
         eventsCollection.whereEqualTo("userId", userId)
                 .get()

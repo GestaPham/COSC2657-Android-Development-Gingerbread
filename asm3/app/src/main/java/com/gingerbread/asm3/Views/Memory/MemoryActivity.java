@@ -2,20 +2,16 @@ package com.gingerbread.asm3.Views.Memory;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-
 import com.gingerbread.asm3.Adapter.MemoryAdapter;
 import com.gingerbread.asm3.Models.Memory;
-
 import com.gingerbread.asm3.R;
-import com.gingerbread.asm3.Services.UserService;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -26,31 +22,39 @@ import java.util.List;
 public class MemoryActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private MemoryAdapter memoryAdapter;
-    private FirebaseFirestore firestore;
-    private UserService userService;
     private List<Memory> memoryList = new ArrayList<>();
-    private Intent allMemoryIntent;
     private String memoriesJson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_memory);
-        recyclerView =findViewById(R.id.all_memories_recycler);
-        allMemoryIntent = getIntent();
-        memoriesJson = allMemoryIntent.getStringExtra("memoriesJson");
-        if(memoriesJson!=null){
-            Type listType = new TypeToken<ArrayList<Memory>>() {}.getType();
-            memoryList = new Gson().fromJson(memoriesJson,listType);
-            for (Memory memory : memoryList) {
-                Log.d("Memory", "Name: " + memory.getMemoryName() + ", Note: " + memory.getNote());
-            }
-        }
-        memoryAdapter = new MemoryAdapter(memoryList,memory -> {
 
-        });
+        ImageButton buttonBack = findViewById(R.id.buttonBack);
+        buttonBack.setOnClickListener(v -> finish());
+
+        recyclerView = findViewById(R.id.all_memories_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(memoryAdapter);
 
+        Intent intent = getIntent();
+        memoriesJson = intent.getStringExtra("memoriesJson");
+
+        if (memoriesJson != null) {
+            Type listType = new TypeToken<ArrayList<Memory>>() {}.getType();
+            memoryList = new Gson().fromJson(memoriesJson, listType);
+        }
+
+        memoryAdapter = new MemoryAdapter(memoryList, memory -> {
+            Toast.makeText(this, "Clicked on: " + memory.getMemoryName(), Toast.LENGTH_SHORT).show();
+        });
+        recyclerView.setAdapter(memoryAdapter);
+
+        recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(android.graphics.Rect outRect, android.view.View view, RecyclerView parent, RecyclerView.State state) {
+                outRect.set(0, 0, 0, 16);
+            }
+        });
     }
 }

@@ -12,10 +12,16 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+
+
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.gingerbread.asm3.Adapter.EventAdapter;
 import com.gingerbread.asm3.Adapter.MemoryAdapter;
+import com.gingerbread.asm3.Models.Event;
 import com.gingerbread.asm3.Models.Memory;
 import com.gingerbread.asm3.Models.Relationship;
 import com.gingerbread.asm3.Models.User;
@@ -39,11 +45,13 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener{
+public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener, MemoryAdapter.OnMemoryClickListener {
+
 
     private CalendarView calendarView;
-    private ImageButton addMemoryButton2,addEventButton2;
+    private ImageButton addMemoryButton2, addEventButton2;
     private long selectedDate;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
@@ -59,6 +67,10 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private UserService userService = new UserService();
     private String relationshipId;
     private String argUserSharedToken;
+    private List<Event> eventList;
+    private EventAdapter eventAdapter;
+
+
     Gson gson = new Gson();
 
 
@@ -69,14 +81,35 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         calendarView = findViewById(R.id.calendarView);
-        addEventButton2 =findViewById(R.id.addEventButton2);
+        addEventButton2 = findViewById(R.id.addEventButton2);
         addMemoryButton2 = findViewById(R.id.addMemoryButton2);
         viewAll = findViewById(R.id.viewAllLink);
         selectedDate = calendarView.getDate();
 
+        RecyclerView recyclerViewEvents = findViewById(R.id.recyclerViewEvents);
         recyclerViewEvents.setLayoutManager(new LinearLayoutManager(this));
-        eventAdapter = new EventAdapter(eventList);
+
+        // Initialize event list and adapter
+        eventList = new ArrayList<>();
+        eventAdapter = new EventAdapter(eventList, event -> {
+            // Handle event click
+            Toast.makeText(this, "Clicked: " + event.getEventName(), Toast.LENGTH_SHORT).show();
+        });
+
         recyclerViewEvents.setAdapter(eventAdapter);
+
+        fetchEventsForDate(selectedDate);
+
+        ViewPager2 viewPagerMemories = findViewById(R.id.viewPagerMemories);
+
+        // Use the shared userMemories list for the adapter
+        memoryAdapter = new MemoryAdapter(userMemories, this);
+        viewPagerMemories.setAdapter(memoryAdapter);
+
+        // Fetch memories for current user
+        fetchUsersMemories(currentUser.getUid(), null);
+
+        memoryAdapter = new MemoryAdapter(userMemories, this);
 
         calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
@@ -87,19 +120,44 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         });
 
         addEventButton2.setOnClickListener(v -> addEvent());
-        addMemoryButton2.setOnClickListener(v->addMemory());
-        viewAll.setOnClickListener(v->{
-            fetchUsersMemories(currentUser.getUid(),()->{
+        addMemoryButton2.setOnClickListener(v -> addMemory());
+        viewAll.setOnClickListener(v -> {
+            fetchUsersMemories(currentUser.getUid(), () -> {
                 String memoriesJson = gson.toJson(userMemories);
-                Log.d("user memories",memoriesJson.toString());
+                Log.d("user memories", memoriesJson.toString());
                 Intent intent = new Intent(CalendarActivity.this, MemoryActivity.class);
-                intent.putExtra("memoriesJson",memoriesJson);
+                intent.putExtra("memoriesJson", memoriesJson);
                 startActivity(intent);
             });
 
 
         });
         fetchEventsForDate(selectedDate);
+    }
+
+    private void fetchEventsForDate(long selectedDate) {
+        calendarService.getAllEvents(currentUser.getUid(), new CalendarService.EventsCallback() {
+            @Override
+            public void onSuccess(List<Event> events) {
+                if (eventList != null) {
+                    eventList.clear();
+                    eventList.addAll(events);
+                    eventAdapter.notifyDataSetChanged();
+
+                    TextView noEventsText = findViewById(R.id.noEventsText);
+                    if (eventList.isEmpty()) {
+                        noEventsText.setVisibility(View.VISIBLE);
+                    } else {
+                        noEventsText.setVisibility(View.GONE);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(CalendarActivity.this, "Error fetching events: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void addEvent() {
@@ -118,37 +176,42 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
             Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
         }
     }
+
     private void addMemory() {
         AddMemoryBottomSheetDialog addMemoryBottomSheetDialog = new AddMemoryBottomSheetDialog();
-        addMemoryBottomSheetDialog.show(getSupportFragmentManager(),"AddMemoryBottomSheet");
-        Log.d("CurrentUserID",currentUser.getUid());
+        addMemoryBottomSheetDialog.show(getSupportFragmentManager(), "AddMemoryBottomSheet");
+        Log.d("CurrentUserID", currentUser.getUid());
     }
 
-    private void fetchUsersMemories(String currentUserId,Runnable onComplete){
+    private void fetchUsersMemories(String currentUserId, Runnable onComplete) {
         calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
             @Override
             public void onError(Exception e) {
                 Log.e("UsersMemoryCallback", "Error fetching memory: ", e);
-                Toast toast = Toast.makeText(CalendarActivity.this,"Error fetching memories", Toast.LENGTH_SHORT);
-                toast.show();
+                Toast.makeText(CalendarActivity.this, "Error fetching memories", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onMemoriesFetched(List<Memory> memories) {
                 userMemories.clear();
                 userMemories.addAll(memories);
-                Log.d("memories list", "Fetched " + userMemories.size() + " memories");
+                memoryAdapter.notifyDataSetChanged();
 
-                // Call the onComplete callback after data is ready
+                TextView noMemoriesText = findViewById(R.id.noMemoriesText);
+                if (userMemories.isEmpty()) {
+                    noMemoriesText.setVisibility(View.VISIBLE);
+                } else {
+                    noMemoriesText.setVisibility(View.GONE);
+                }
+
                 if (onComplete != null) {
                     onComplete.run();
                 }
             }
         });
-
     }
 
-    private void addNewMemory(String name,String note,String date,String imageUrl,String userId,String relationshipId){
+    private void addNewMemory(String name, String note, String date, String imageUrl, String userId, String relationshipId) {
         Memory newMemory = new Memory();
         newMemory.setNote(note);
         newMemory.setMemoryName(name);
@@ -156,8 +219,9 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         newMemory.setImageUrl(imageUrl);
         newMemory.setUserId(userId);
         newMemory.setRelationshipId(relationshipId);
-        calendarService.addMemory(newMemory,this);
+        calendarService.addMemory(newMemory, this);
     }
+
     @Override
     protected int getLayoutId() {
         return R.layout.activity_base;
@@ -170,18 +234,18 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
     @Override
     public void onMemoryAdded(String name, String note, String date, String imageUrl) {
-        Log.d("CurrentUserID",currentUser.getUid());
+        Log.d("CurrentUserID", currentUser.getUid());
         getCurrentUserRelationship();
 
-        if(relationshipId != null) {
-            Log.d("relationShipId",relationshipId);
+        if (relationshipId != null) {
+            Log.d("relationShipId", relationshipId);
             addNewMemory(name, note, date, imageUrl, currentUser.getUid(), relationshipId);
-        }
-        else{
-            addNewMemory(name,note, date,imageUrl, currentUser.getUid(),"");
+        } else {
+            addNewMemory(name, note, date, imageUrl, currentUser.getUid(), "");
         }
     }
-    private void getCurrentUserRelationship(){
+
+    private void getCurrentUserRelationship() {
         userService.getUser(currentUser.getUid(), new UserService.UserCallback() {
             @Override
             public void onSuccess(Map<String, Object> userData) {
@@ -199,19 +263,30 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
                                 Log.d("Relationship", "No relationship found for shareToken: " + userShareToken);
                             }
                         }
+
                         @Override
                         public void onFailure(String errorMessage) {
                             Log.e("RelationshipService", "Failed to fetch relationship: " + errorMessage);
                         }
                     });
-                }else{
+                } else {
                     Log.d("Relationship", "No shareToken available for the current user.");
                 }
             }
+
             @Override
             public void onFailure(String errorMessage) {
             }
         });
 
     }
+
+    @Override
+    public void onMemoryClick(Memory memory) {
+        Intent intent = new Intent(this, MemoryActivity.class);
+        String memoriesJson = new Gson().toJson(userMemories);
+        intent.putExtra("memoriesJson", memoriesJson);
+        startActivity(intent);
+    }
+
 }

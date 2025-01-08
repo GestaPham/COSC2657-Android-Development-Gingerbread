@@ -136,5 +136,4 @@ public class AddMemoryBottomSheetDialog extends BottomSheetDialogFragment {
     public interface ImageUploadListener {
         void onImageUploaded(String imageUrl);
     }
-
 }

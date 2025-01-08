@@ -1,79 +1,105 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:background="@color/light_background"
+    android:padding="24dp">
 
-    <TextView
-        android:id="@+id/textView"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Memory Name" />
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
-    <EditText
-        android:id="@+id/memoryNameInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter the name"
-        android:inputType="text"
-        android:padding="12dp" />
+        <TextView
+            android:id="@+id/modalTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Memory"
+            android:textSize="24sp"
+            android:textColor="@color/light_blue"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Day/Month/Year" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Memory Name"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp" />
 
-    <EditText
-        android:id="@+id/dateInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="day/month/year"
-        android:inputType="textMultiLine"
-        android:padding="12dp" />
+        <EditText
+            android:id="@+id/memoryNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/custom_text_bg"
+            android:hint="Enter the name"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:inputType="text" />
 
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add note" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Date"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:layout_marginTop="16dp" />
 
-    <EditText
-        android:id="@+id/noteInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="Enter note (Optional)"
-        android:text="Name" />
+        <EditText
+            android:id="@+id/dateInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/custom_text_bg"
+            android:hint="Day/Month/Year"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:inputType="date" />
 
-    <Spinner
-        android:id="@+id/spinnerMood"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"/>
-    <!--android:entries="@array/mood_array"-->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Note"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:layout_marginTop="16dp" />
 
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add photo" />
+        <EditText
+            android:id="@+id/noteInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/custom_text_bg"
+            android:hint="Enter note (Optional)"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:inputType="text" />
 
-    <ImageButton
-        android:id="@+id/addPhotoButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:srcCompat="@android:drawable/ic_menu_upload" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Photo"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:layout_marginTop="16dp" />
 
-    <Button
-        android:id="@+id/buttonAddMemoryModal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Create"
-        android:backgroundTint="@color/light_pink"
-        android:textColor="@android:color/white"
-        android:layout_marginTop="12dp" />
+        <ImageButton
+            android:id="@+id/addPhotoButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@null"
+            android:src="@drawable/ic_upload"
+            android:contentDescription="Add Photo"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp" />
 
-</LinearLayout>
+        <Button
+            android:id="@+id/buttonAddMemoryModal"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:backgroundTint="@color/light_pink"
+            android:text="Create"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>
