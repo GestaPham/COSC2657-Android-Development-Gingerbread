@@ -17,12 +17,18 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.gingerbread.asm3.Adapter.MemoryAdapter;
 import com.gingerbread.asm3.Models.Memory;
+import com.gingerbread.asm3.Models.Relationship;
+import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.RelationshipService;
+import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import com.gingerbread.asm3.Services.CalendarService;
+import com.gingerbread.asm3.Views.Home.MainActivity;
 import com.gingerbread.asm3.Views.Memory.MemoryActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -33,6 +39,7 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener{
 
@@ -44,9 +51,15 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private MemoryAdapter memoryAdapter;
     private HashMap<Long, List<String>> eventsMap = new HashMap<>();
     private HashMap<String, Memory> memoryHashMap = new HashMap<>();
+    private HashMap<String, User> userHashMap = new HashMap<>();
     private List<Memory> userMemories = new ArrayList<>();
     private CalendarService calendarService = new CalendarService();
     private TextView viewAll;
+    private FirebaseFirestore firestore;
+    private RelationshipService relationshipService = new RelationshipService();
+    private UserService userService = new UserService();
+    private String relationshipId;
+    private String argUserSharedToken;
     Gson gson = new Gson();
 
 
@@ -156,7 +169,54 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     @Override
     public void onMemoryAdded(String name, String note, String date, String imageUrl) {
         Log.d("CurrentUserID",currentUser.getUid());
-        addNewMemory(name,note, date,imageUrl, currentUser.getUid(),"");
+        getCurrentUserRelationship();
+
+        if(relationshipId != null) {
+            Log.d("relationShipId",relationshipId);
+            addNewMemory(name, note, date, imageUrl, currentUser.getUid(), relationshipId);
+        }
+        else{
+            addNewMemory(name,note, date,imageUrl, currentUser.getUid(),"");
+        }
     }
+    private void getCurrentUserRelationship(){
+        userService.getUser(currentUser.getUid(), new UserService.UserCallback() {
+            @Override
+            public void onSuccess(Map<String, Object> userData) {
+                User user = new Gson().fromJson(new Gson().toJson(userData), User.class);
+                String userShareToken = user.getShareToken();
+                if (userShareToken != null && userShareToken.startsWith("LINKED")) {
+                    //argUserSharedToken = userShareToken;
+                    relationshipService.getRelationshipByShareToken(userShareToken, new RelationshipService.RelationshipCallback() {
+                        @Override
+                        public void onSuccess(Relationship relationship) {
+                            if (relationship != null) {
+                                relationshipId = relationship.getRelationshipId();
+                                Log.d("Relationship", "Relationship name: " + relationshipId);
+                            } else {
+                                Log.d("Relationship", "No relationship found for shareToken: " + userShareToken);
+                            }
+                        }
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            Log.e("RelationshipService", "Failed to fetch relationship: " + errorMessage);
+                        }
+                    });
+                }else{
+                    Log.d("Relationship", "No shareToken available for the current user.");
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+
+            }
+        });
+
+    }
+
+
+
+
 
 }
