@@ -30,10 +30,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {
     implementation(libs.android.volley)
+    implementation("com.google.firebase:firebase-storage:20.2.1")
     implementation(libs.glide)
     implementation(libs.mpandroidchart)
     implementation(platform(libs.firebase.bom))
@@ -45,6 +49,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.firebase.firestore)
+    implementation(libs.google.firebase.storage)
     implementation(libs.okhttp)
     implementation(libs.material.v190)
     implementation(libs.androidx.recyclerview)
@@ -58,6 +63,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.androidx.legacy.support.v4)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
