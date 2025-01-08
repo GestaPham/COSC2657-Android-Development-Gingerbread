@@ -74,11 +74,14 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         //addMemoryButton.setOnClickListener(v -> addMemory());
         addMemoryButton2.setOnClickListener(v->addMemory());
         viewAll.setOnClickListener(v->{
-            fetchUsersMemories(currentUser.getUid());
-            String memoriesJson = gson.toJson(userMemories);
-            Intent intent = new Intent(CalendarActivity.this, MemoryActivity.class);
-            intent.putExtra("memoriesJson",memoriesJson);
-            startActivity(intent);
+            fetchUsersMemories(currentUser.getUid(),()->{
+                String memoriesJson = gson.toJson(userMemories);
+                Log.d("user memories",memoriesJson.toString());
+                Intent intent = new Intent(CalendarActivity.this, MemoryActivity.class);
+                intent.putExtra("memoriesJson",memoriesJson);
+                startActivity(intent);
+            });
+
 
         });
     }
@@ -105,7 +108,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         Log.d("CurrentUserID",currentUser.getUid());
     }
 
-    private void fetchUsersMemories(String currentUserId){
+    private void fetchUsersMemories(String currentUserId,Runnable onComplete){
         calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
             @Override
             public void onError(Exception e) {
@@ -116,8 +119,14 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
             @Override
             public void onMemoriesFetched(List<Memory> memories) {
-                userMemories = memories;
+                userMemories.clear();
+                userMemories.addAll(memories);
+                Log.d("memories list", "Fetched " + userMemories.size() + " memories");
 
+                // Call the onComplete callback after data is ready
+                if (onComplete != null) {
+                    onComplete.run();
+                }
             }
         });
 

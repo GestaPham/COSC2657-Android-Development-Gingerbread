@@ -49,6 +49,7 @@ public class MemoryActivity extends AppCompatActivity {
         memoryAdapter = new MemoryAdapter(memoryList,memory -> {
 
         });
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(memoryAdapter);
 
