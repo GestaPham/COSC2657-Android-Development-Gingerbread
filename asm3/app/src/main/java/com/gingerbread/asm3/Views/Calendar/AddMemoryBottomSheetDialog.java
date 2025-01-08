@@ -23,10 +23,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.gingerbread.asm3.R;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -96,13 +99,44 @@ public class AddMemoryBottomSheetDialog extends BottomSheetDialogFragment {
             FirebaseStorage storage = FirebaseStorage.getInstance();
             StorageReference storageRef = storage.getReference();
 
-            String fileName = System.currentTimeMillis() + ".jpg";
-            StorageReference fileRef = storageRef.child("/images" + fileName);
+            String uniqueFileName = "images/" + System.currentTimeMillis() + "_" + imageUri.getLastPathSegment();
+            StorageReference fileRef = storageRef.child(uniqueFileName);
 
             try{
                 InputStream inputStream = requireActivity().getContentResolver().openInputStream(imageUri);
                 Log.d("fileRefPath",fileRef.getPath());
                 if (inputStream != null) {
+                    UploadTask uploadTask;
+                    uploadTask = fileRef.putStream(inputStream);
+                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                    fileRef.getDownloadUrl().addOnSuccessListener(uri->{
+                                        String uploadedImageUrl = uri.toString();
+                                        Log.d("Firebase", "File uploaded successfully. URL: " + uploadedImageUrl);
+                                    });
+                                }
+                            })
+                            .addOnFailureListener(e->{
+                                Log.e("Firebase", "File upload failed: " + e.getMessage());
+                            });
+                }
+            }catch (FileNotFoundException e){
+                Log.e("Firebase", "File not found: " + e.getMessage());
+            }
+        }else{
+
+        }
+    }
+}
+   /*
+            fileRef.putFile(imageUri)
+                    .addOnSuccessListener(taskSnapshot->{
+                        fileRef.getDownloadUrl().addOnSuccessListener(uri->{
+                            uploadedImageUrl =uri.toString();
+                        });
+                    }).addOnFailureListener(e->{});*/
+             /*
                     fileRef.putStream(inputStream)
                             .addOnSuccessListener(taskSnapshot -> {
                                 fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
@@ -113,20 +147,4 @@ public class AddMemoryBottomSheetDialog extends BottomSheetDialogFragment {
                             .addOnFailureListener(e -> {
                                 Log.e("Firebase", "File upload failed: " + e.getMessage());
                                 ;
-                            });
-                }
-            }catch (FileNotFoundException e){
-                Log.e("Firebase", "File not found: " + e.getMessage());
-            }
-            /*
-            fileRef.putFile(imageUri)
-                    .addOnSuccessListener(taskSnapshot->{
-                        fileRef.getDownloadUrl().addOnSuccessListener(uri->{
-                            uploadedImageUrl =uri.toString();
-                        });
-                    }).addOnFailureListener(e->{});*/
-        }else{
-
-        }
-    }
-}
+                            });*/
