@@ -302,7 +302,6 @@ public class MainActivity extends BaseActivity {
         textViewMoodAdvice.setText(latestMoodLog.getNotes());
     }
 
-
     private void updateMood(String mood, int moodIcon) {
         try {
             InputStream is = getAssets().open("mock_mood_advice.json");
@@ -326,14 +325,17 @@ public class MainActivity extends BaseActivity {
 
             findViewById(R.id.moodOptionsContainer).setVisibility(View.GONE);
 
-            saveMoodLog(mood, advice);
+            saveMoodLog(mood, advice, () -> {
+                Intent intent = new Intent(MainActivity.this, MoodTrackerActivity.class);
+                startActivity(intent);
+            });
 
         } catch (Exception e) {
             Toast.makeText(this, "Error loading mood advice: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void saveMoodLog(String mood, String advice) {
+    private void saveMoodLog(String mood, String advice, Runnable onComplete) {
         String userId = auth.getCurrentUser().getUid();
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
@@ -344,6 +346,10 @@ public class MainActivity extends BaseActivity {
             documentReference.update("logId", generatedLogId).addOnSuccessListener(aVoid -> {
                 Toast.makeText(this, "Mood logged successfully", Toast.LENGTH_SHORT).show();
                 disableMoodSelection(moodLog);
+
+                if (onComplete != null) {
+                    onComplete.run();
+                }
             }).addOnFailureListener(e -> {
                 Toast.makeText(this, "Failed to update logId: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
@@ -351,7 +357,6 @@ public class MainActivity extends BaseActivity {
             Toast.makeText(this, "Failed to log mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
-
 
     private void autoScrollMemories() {
         final Handler handler = new Handler();
