@@ -96,7 +96,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
         eventList = new ArrayList<>();
         eventAdapter = new EventAdapter(eventList, event -> {
-            Toast.makeText(this, "Clicked: " + event.getEventName(), Toast.LENGTH_SHORT).show();
+            // Handle event click
         });
 
         recyclerViewEvents.setAdapter(eventAdapter);
