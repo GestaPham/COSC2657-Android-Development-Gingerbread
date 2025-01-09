@@ -1,5 +1,7 @@
 package com.gingerbread.asm3.Views.Calendar;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -48,8 +50,6 @@ import java.util.List;
 import java.util.Map;
 
 public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener, MemoryAdapter.OnMemoryClickListener {
-
-
     private CalendarView calendarView;
     private ImageButton addMemoryButton2, addEventButton2;
     private long selectedDate;
@@ -160,7 +160,10 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         });
     }
 
-    private void addEvent() {
+    private void addEvent(){
+        AddEventBottomSheetDialog addEventBottomSheetDialog = new AddEventBottomSheetDialog();
+        addEventBottomSheetDialog.show(getSupportFragmentManager(),"AddEventBottomSheet");
+        /*
         Intent intent = new Intent(Intent.ACTION_INSERT);
         intent.setData(CalendarContract.Events.CONTENT_URI);
         intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, selectedDate);
@@ -174,7 +177,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
             startActivity(intent);
         } else {
             Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
-        }
+        }*/
     }
 
     private void addMemory() {
