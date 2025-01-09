@@ -76,7 +76,6 @@ public class MemoryActivity extends AppCompatActivity {
                 imageMemory.setImageResource(R.drawable.ic_placeholder_image);
             }
 
-            // Dynamically override ImageView layout params for this activity
             imageMemory.setScaleType(ImageView.ScaleType.FIT_CENTER);
             imageMemory.setAdjustViewBounds(true);
 
@@ -84,10 +83,6 @@ public class MemoryActivity extends AppCompatActivity {
             imageParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
             imageParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
             imageMemory.setLayoutParams(imageParams);
-
-            cardView.setOnClickListener(v -> {
-                Toast.makeText(this, "Clicked on: " + memory.getMemoryName(), Toast.LENGTH_SHORT).show();
-            });
 
             memoryContainer.addView(cardView);
 
