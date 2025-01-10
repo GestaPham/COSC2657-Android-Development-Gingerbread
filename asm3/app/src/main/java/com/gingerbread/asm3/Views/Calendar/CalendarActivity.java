@@ -130,7 +130,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
                 startActivity(intent);
             });
 
-
         });
         fetchEventsForDate(selectedDate);
     }
@@ -209,7 +208,13 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         newMemory.setRelationshipId(relationshipId);
         calendarService.addMemory(newMemory, this);
     }
-
+    private void addNewEvent(String name,String note,String reminder,String description,String date){
+        Event newEvent = new Event();
+        newEvent.setEventDate(date);
+        newEvent.setEventName(name);
+        newEvent.setEventDescription(description);
+        calendarService.addEvent(newEvent,this);
+    }
     @Override
     protected int getLayoutId() {
         return R.layout.activity_base;
@@ -232,7 +237,11 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
             addNewMemory(name, note, date, imageUrl, currentUser.getUid(), "");
         }
     }
-
+    @Override
+    public void onEventAdded(String date, String name, String note) {
+        //addNewEvent(name,date,);
+        Toast.makeText(this, "Event added: " + name + " on " + date, Toast.LENGTH_SHORT).show();
+    }
     private void getCurrentUserRelationship() {
         userService.getUser(currentUser.getUid(), new UserService.UserCallback() {
             @Override
@@ -277,23 +286,5 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         startActivity(intent);
     }
 
-    @Override
-    public void onEventAdded(String date, String name, String note) {
-        Toast.makeText(this, "Event added: " + name + " on " + date, Toast.LENGTH_SHORT).show();
-    }
-}
-    /*
-        Intent intent = new Intent(Intent.ACTION_INSERT);
-        intent.setData(CalendarContract.Events.CONTENT_URI);
-        intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, selectedDate);
-        intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, selectedDate + 60 * 60 * 1000);
-        intent.putExtra(CalendarContract.Events.TITLE, "New Event");
-        intent.putExtra(CalendarContract.Events.DESCRIPTION, "Event Description");
-        intent.putExtra(CalendarContract.Events.EVENT_LOCATION, "Event Location");
-        intent.putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
 
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
-        } else {
-            Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
-        }*/
+}
