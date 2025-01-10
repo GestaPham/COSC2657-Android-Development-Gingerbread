@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="reminders_array">
+        <item>at occurrence</item>
+        <item>Before 10 minutes</item>
         <item>Before 1 hour</item>
-        <item>Before 12 hours</item>
         <item>Before 1 day</item>
-        <item>Before 3 days</item>
-        <item>Before 1 week</item>
-        <item>Before 1 month</item>
     </string-array>
 </resources>

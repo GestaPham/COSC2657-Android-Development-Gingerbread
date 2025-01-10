@@ -49,7 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener, MemoryAdapter.OnMemoryClickListener {
+public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener, MemoryAdapter.OnMemoryClickListener,AddEventBottomSheetDialog.AddEventListener {
     private CalendarView calendarView;
     private ImageButton addMemoryButton2, addEventButton2;
     private long selectedDate;
@@ -163,21 +163,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private void addEvent(){
         AddEventBottomSheetDialog addEventBottomSheetDialog = new AddEventBottomSheetDialog();
         addEventBottomSheetDialog.show(getSupportFragmentManager(),"AddEventBottomSheet");
-        /*
-        Intent intent = new Intent(Intent.ACTION_INSERT);
-        intent.setData(CalendarContract.Events.CONTENT_URI);
-        intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, selectedDate);
-        intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, selectedDate + 60 * 60 * 1000);
-        intent.putExtra(CalendarContract.Events.TITLE, "New Event");
-        intent.putExtra(CalendarContract.Events.DESCRIPTION, "Event Description");
-        intent.putExtra(CalendarContract.Events.EVENT_LOCATION, "Event Location");
-        intent.putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
-
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
-        } else {
-            Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
-        }*/
     }
 
     private void addMemory() {
@@ -292,4 +277,23 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         startActivity(intent);
     }
 
+    @Override
+    public void onEventAdded(String date, String name, String note) {
+        Toast.makeText(this, "Event added: " + name + " on " + date, Toast.LENGTH_SHORT).show();
+    }
 }
+    /*
+        Intent intent = new Intent(Intent.ACTION_INSERT);
+        intent.setData(CalendarContract.Events.CONTENT_URI);
+        intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, selectedDate);
+        intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, selectedDate + 60 * 60 * 1000);
+        intent.putExtra(CalendarContract.Events.TITLE, "New Event");
+        intent.putExtra(CalendarContract.Events.DESCRIPTION, "Event Description");
+        intent.putExtra(CalendarContract.Events.EVENT_LOCATION, "Event Location");
+        intent.putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "No events for this date.", Toast.LENGTH_SHORT).show();
+        }*/
