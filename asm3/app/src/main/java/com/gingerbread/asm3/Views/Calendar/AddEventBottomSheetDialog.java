@@ -11,6 +11,7 @@ import android.icu.util.Calendar;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +34,9 @@ import androidx.fragment.app.FragmentManager;
 import com.gingerbread.asm3.R;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -117,13 +121,25 @@ public class AddEventBottomSheetDialog extends BottomSheetDialogFragment impleme
     private void addEvent(String title, String description, String date, String reminderBefore) {
         ContentResolver contentResolver = this.requireContext().getContentResolver();
         ContentValues eventValues = new ContentValues();
-        eventValues.put(CalendarContract.Events.CALENDAR_ID, 1);
-        eventValues.put(CalendarContract.Events.TITLE, title);
-        eventValues.put(CalendarContract.Events.DESCRIPTION, description);
-        eventValues.put(CalendarContract.Events.DTSTART, date);
-        eventValues.put(CalendarContract.Events.DTEND, date);
-        eventValues.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
-        eventValues.put(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
+        Log.d("date input",date);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date dateFormatted = null;
+        try{
+            dateFormatted = dateFormat.parse(date);
+        } catch (ParseException e){
+            Log.e("dateFormatProblem",e.toString());
+        }
+        if (dateFormatted != null) {
+            eventValues.put(CalendarContract.Events.CALENDAR_ID, 1);
+            eventValues.put(CalendarContract.Events.TITLE, title);
+            eventValues.put(CalendarContract.Events.DESCRIPTION, description);
+            eventValues.put(CalendarContract.Events.DTSTART, dateFormatted.getTime());
+            eventValues.put(CalendarContract.Events.DTEND, dateFormatted.getTime());
+            eventValues.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
+            eventValues.put(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
+        }else {
+                Log.e("dateFormatProblem", "Failed to parse date: " + date);
+            }
         Uri eventUri = contentResolver.insert(CalendarContract.Events.CONTENT_URI, eventValues);
         if (eventUri != null) {
             long eventId = ContentUris.parseId(eventUri);
@@ -173,7 +189,7 @@ public class AddEventBottomSheetDialog extends BottomSheetDialogFragment impleme
 
         @Override
         public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-            String date = String.format(String.valueOf(Locale.getDefault()), year, month + 1, dayOfMonth);
+            String date = String.format(Locale.getDefault(),"%04d-%02d-%02d", year, month + 1, dayOfMonth);
             if (listener != null) {
                 listener.onDateSelected(date);
             }

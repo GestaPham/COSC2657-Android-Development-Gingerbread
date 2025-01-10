@@ -6,7 +6,7 @@ public class Event {
     private String eventName;
     private String eventDate;
     private String eventDescription;
-    private String imageUrl;
+    private String eventNote;
 
     public Event() {
     }
@@ -17,7 +17,7 @@ public class Event {
         this.eventName = eventName;
         this.eventDate = eventDate;
         this.eventDescription = eventDescription;
-        this.imageUrl = imageUrl;
+        this.eventNote = imageUrl;
     }
 
     public String getEventId() {
@@ -60,12 +60,12 @@ public class Event {
         this.eventDescription = eventDescription;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getEventNote() {
+        return eventNote;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setEventNote(String eventNote) {
+        this.eventNote = eventNote;
     }
 }
 
