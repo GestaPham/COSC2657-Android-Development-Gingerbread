@@ -129,7 +129,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
                 intent.putExtra("memoriesJson", memoriesJson);
                 startActivity(intent);
             });
-
+            
         });
         fetchEventsForDate(selectedDate);
     }
@@ -239,11 +239,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
             addNewMemory(name, note, date, imageUrl, currentUser.getUid(), "");
         }
     }
-    @Override
-    public void onEventAdded(String date, String name, String note) {
-        //addNewEvent(name,date,);
-        Toast.makeText(this, "Event added: " + name + " on " + date, Toast.LENGTH_SHORT).show();
-    }
+
     private void getCurrentUserRelationship() {
         userService.getUser(currentUser.getUid(), new UserService.UserCallback() {
             @Override
@@ -288,5 +284,8 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         startActivity(intent);
     }
 
-
+    @Override
+    public void onEventAdded(String date, String name, String note) {
+        Toast.makeText(this, "Event added: " + name + " on " + date, Toast.LENGTH_SHORT).show();
+    }
 }
