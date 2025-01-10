@@ -9,6 +9,7 @@ import com.gingerbread.asm3.Models.Memory;
 
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -50,6 +51,25 @@ public class CalendarService {
         }).addOnFailureListener(e -> {
         });
     }
+
+    public void getAllMemoriesByRelationshipId(String relationshipId, UsersMemoriesCallback callback) {
+        FirebaseFirestore.getInstance()
+                .collection("memories")
+                .whereEqualTo("relationshipId", relationshipId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Memory> memories = new ArrayList<>();
+                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        Memory memory = document.toObject(Memory.class);
+                        if (memory != null) {
+                            memories.add(memory);
+                        }
+                    }
+                    callback.onMemoriesFetched(memories);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
 
     public void addMemory(Memory memory, Context context, CalendarService.MemoryAddedCallback callback) {
         Toast toast = new Toast(context);

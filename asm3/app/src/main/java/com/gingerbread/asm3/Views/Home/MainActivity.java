@@ -166,10 +166,7 @@ public class MainActivity extends BaseActivity {
             textViewGreeting.setText("Hi, " + user.getName());
 
             if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
-                Glide.with(this)
-                        .load(user.getProfilePictureUrl())
-                        .placeholder(R.drawable.ic_placeholder)
-                        .into(imageViewProfile);
+                Glide.with(this).load(user.getProfilePictureUrl()).placeholder(R.drawable.ic_placeholder).into(imageViewProfile);
             } else {
                 imageViewProfile.setImageResource(R.drawable.ic_placeholder);
             }
@@ -368,33 +365,55 @@ public class MainActivity extends BaseActivity {
     private void initializeMemoryCarousel() {
         String currentUserId = auth.getCurrentUser().getUid();
 
-        calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
+        relationshipService.getRelationshipByUserId(currentUserId, new RelationshipService.RelationshipCallback() {
             @Override
-            public void onError(Exception e) {
-                Log.e("MemoryCarousel", "Error fetching memories: ", e);
-                Toast.makeText(MainActivity.this, "Error fetching memories", Toast.LENGTH_SHORT).show();
+            public void onSuccess(Relationship relationship) {
+                if (relationship != null) {
+                    String relationshipId = relationship.getRelationshipId();
+
+                    calendarService.getAllMemoriesByRelationshipId(relationshipId, new CalendarService.UsersMemoriesCallback() {
+                        @Override
+                        public void onError(Exception e) {
+                            Log.e("MemoryCarousel", "Error fetching memories: ", e);
+                            Toast.makeText(MainActivity.this, "Error fetching memories", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onMemoriesFetched(List<Memory> memories) {
+                            if (memories.isEmpty()) {
+                                // Display a placeholder message when no memories exist
+                                findViewById(R.id.viewPagerMemories).setVisibility(View.GONE);
+                                findViewById(R.id.noMemoriesTextView).setVisibility(View.VISIBLE);
+                            } else {
+                                findViewById(R.id.viewPagerMemories).setVisibility(View.VISIBLE);
+                                findViewById(R.id.noMemoriesTextView).setVisibility(View.GONE);
+
+                                memoryAdapter = new MemoryAdapter(memories, memory -> {
+                                    Intent intent = new Intent(MainActivity.this, MemoryActivity.class);
+                                    String memoriesJson = new Gson().toJson(memories);
+                                    intent.putExtra("memoriesJson", memoriesJson);
+                                    startActivity(intent);
+                                });
+
+                                viewPagerMemories.setAdapter(memoryAdapter);
+                                viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+
+                                if (memories.size() > 1) {
+                                    autoScrollMemories();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    Toast.makeText(MainActivity.this, "No relationship found", Toast.LENGTH_SHORT).show();
+                    findViewById(R.id.noMemoriesTextView).setVisibility(View.VISIBLE);
+                }
             }
 
             @Override
-            public void onMemoriesFetched(List<Memory> memories) {
-                if (memories.isEmpty()) {
-                    Toast.makeText(MainActivity.this, "No memories to display", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                memoryAdapter = new MemoryAdapter(memories, memory -> {
-                    Intent intent = new Intent(MainActivity.this, MemoryActivity.class);
-                    String memoriesJson = new Gson().toJson(memories);
-                    intent.putExtra("memoriesJson", memoriesJson);
-                    startActivity(intent);
-                });
-
-                viewPagerMemories.setAdapter(memoryAdapter);
-                viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-
-                if (memories.size() > 1) {
-                    autoScrollMemories();
-                }
+            public void onFailure(String errorMessage) {
+                Toast.makeText(MainActivity.this, "Error fetching relationship: " + errorMessage, Toast.LENGTH_SHORT).show();
+                findViewById(R.id.noMemoriesTextView).setVisibility(View.VISIBLE);
             }
         });
     }
@@ -418,7 +437,6 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh memory carousel when the activity resumes
         initializeMemoryCarousel();
     }
 
@@ -439,7 +457,6 @@ public class MainActivity extends BaseActivity {
                 return R.drawable.ic_circle;
         }
     }
-
 
     private void hideKeyboard() {
         View view = this.getCurrentFocus();
