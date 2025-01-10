@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="true"
@@ -16,6 +19,12 @@
         android:supportsRtl="true"
         android:theme="@style/Base.Theme.Asm"
         tools:targetApi="31">
+        <activity
+            android:name=".Views.Calendar.AddEventBottomSheetDialog"
+            android:exported="false" />
+        <activity
+            android:name=".Views.Memory.MemoryActivity"
+            android:exported="false" />
         <activity
             android:name=".Views.Support.HelpCenterActivity"
             android:exported="false" />

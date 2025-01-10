@@ -23,11 +23,13 @@ import com.gingerbread.asm3.Models.MoodLog;
 import com.gingerbread.asm3.Models.Relationship;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
+import com.gingerbread.asm3.Services.CalendarService;
 import com.gingerbread.asm3.Services.MilestoneService;
 import com.gingerbread.asm3.Services.MoodService;
 import com.gingerbread.asm3.Services.RelationshipService;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
+import com.gingerbread.asm3.Views.Memory.MemoryActivity;
 import com.gingerbread.asm3.Views.MoodTracker.MoodTrackerActivity;
 import com.gingerbread.asm3.Views.Notification.NotificationActivity;
 import com.google.firebase.auth.FirebaseAuth;
@@ -54,6 +56,8 @@ public class MainActivity extends BaseActivity {
     private MemoryAdapter memoryAdapter;
     private FirebaseFirestore firestore;
     private FirebaseAuth auth;
+    private CalendarService calendarService;
+
 
     private User user;
     private UserService userService;
@@ -104,6 +108,9 @@ public class MainActivity extends BaseActivity {
             Intent intent = new Intent(MainActivity.this, MoodTrackerActivity.class);
             startActivity(intent);
         });
+
+        calendarService = new CalendarService();
+        initializeMemoryCarousel();
 
     }
 
@@ -302,7 +309,6 @@ public class MainActivity extends BaseActivity {
         textViewMoodAdvice.setText(latestMoodLog.getNotes());
     }
 
-
     private void updateMood(String mood, int moodIcon) {
         try {
             InputStream is = getAssets().open("mock_mood_advice.json");
@@ -326,14 +332,17 @@ public class MainActivity extends BaseActivity {
 
             findViewById(R.id.moodOptionsContainer).setVisibility(View.GONE);
 
-            saveMoodLog(mood, advice);
+            saveMoodLog(mood, advice, () -> {
+                Intent intent = new Intent(MainActivity.this, MoodTrackerActivity.class);
+                startActivity(intent);
+            });
 
         } catch (Exception e) {
             Toast.makeText(this, "Error loading mood advice: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void saveMoodLog(String mood, String advice) {
+    private void saveMoodLog(String mood, String advice, Runnable onComplete) {
         String userId = auth.getCurrentUser().getUid();
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
@@ -344,6 +353,10 @@ public class MainActivity extends BaseActivity {
             documentReference.update("logId", generatedLogId).addOnSuccessListener(aVoid -> {
                 Toast.makeText(this, "Mood logged successfully", Toast.LENGTH_SHORT).show();
                 disableMoodSelection(moodLog);
+
+                if (onComplete != null) {
+                    onComplete.run();
+                }
             }).addOnFailureListener(e -> {
                 Toast.makeText(this, "Failed to update logId: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
@@ -352,6 +365,39 @@ public class MainActivity extends BaseActivity {
         });
     }
 
+    private void initializeMemoryCarousel() {
+        String currentUserId = auth.getCurrentUser().getUid();
+
+        calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
+            @Override
+            public void onError(Exception e) {
+                Log.e("MemoryCarousel", "Error fetching memories: ", e);
+                Toast.makeText(MainActivity.this, "Error fetching memories", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onMemoriesFetched(List<Memory> memories) {
+                if (memories.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "No memories to display", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                memoryAdapter = new MemoryAdapter(memories, memory -> {
+                    Intent intent = new Intent(MainActivity.this, MemoryActivity.class);
+                    String memoriesJson = new Gson().toJson(memories);
+                    intent.putExtra("memoriesJson", memoriesJson);
+                    startActivity(intent);
+                });
+
+                viewPagerMemories.setAdapter(memoryAdapter);
+                viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+
+                if (memories.size() > 1) {
+                    autoScrollMemories();
+                }
+            }
+        });
+    }
 
     private void autoScrollMemories() {
         final Handler handler = new Handler();
@@ -360,44 +406,22 @@ public class MainActivity extends BaseActivity {
             public void run() {
                 int currentItem = viewPagerMemories.getCurrentItem();
                 int itemCount = memoryAdapter.getItemCount();
-                viewPagerMemories.setCurrentItem((currentItem + 1) % itemCount, true);
-                handler.postDelayed(this, 5000);
+                if (itemCount > 1) {
+                    viewPagerMemories.setCurrentItem((currentItem + 1) % itemCount, true);
+                    handler.postDelayed(this, 5000);
+                }
             }
         };
         handler.postDelayed(runnable, 5000);
     }
 
-    private void initializeMemoryCarousel() {
-        try {
-            InputStream is = getAssets().open("mock_memories.json");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-
-            String json = new String(buffer, "UTF-8");
-            JSONObject jsonObject = new JSONObject(json);
-            JSONArray memoryArray = jsonObject.getJSONArray("memories");
-
-            List<Memory> memories = new ArrayList<>();
-            for (int i = 0; i < memoryArray.length(); i++) {
-                JSONObject obj = memoryArray.getJSONObject(i);
-
-                memories.add(new Memory(obj.getString("memoryId"), obj.getString("memoryName"), obj.getString("date"), obj.getString("note"), obj.getString("imageUrl"), obj.optString("userId", "defaultUserId"), obj.optString("relationshipId", "defaultRelationshipId")));
-            }
-
-            memoryAdapter = new MemoryAdapter(memories, memory -> {
-
-            });
-
-            viewPagerMemories.setAdapter(memoryAdapter);
-            viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-            autoScrollMemories();
-
-        } catch (Exception e) {
-            Toast.makeText(this, "Error loading memories: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh memory carousel when the activity resumes
+        initializeMemoryCarousel();
     }
+
 
     private int getMoodIcon(String mood) {
         switch (mood) {

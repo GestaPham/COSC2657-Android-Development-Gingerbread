@@ -1,12 +1,128 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/light_background"
     android:clipToPadding="false"
     android:paddingBottom="56dp"
     tools:context=".Views.Calendar.CalendarActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/textViewCalendarTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:text="Calendar"
+            android:textColor="@color/light_pink"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <CalendarView
+            android:id="@+id/calendarView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/custom_text_bg" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/addEventText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Events"
+                android:textColor="@color/light_blue"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/addEventButton2"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@null"
+                app:srcCompat="@drawable/plus_button_background" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/noEventsText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No events available"
+            android:textColor="@color/light_gray"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewEvents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/memoriesTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Memories"
+                android:textColor="@color/light_blue"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/viewAllLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="16dp"
+                android:text="View all"
+                android:textColor="@color/light_blue"
+                android:textSize="14sp"
+                android:textStyle="italic" />
+
+            <ImageButton
+                android:id="@+id/addMemoryButton2"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@null"
+                app:srcCompat="@drawable/plus_button_background" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/noMemoriesText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No memories available"
+            android:textColor="@color/light_gray"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:visibility="gone" />
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPagerMemories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>

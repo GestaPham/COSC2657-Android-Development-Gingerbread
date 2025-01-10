@@ -13,17 +13,20 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.gingerbread.asm3.Models.MoodLog;
 import com.gingerbread.asm3.R;
+import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -78,7 +81,7 @@ public class MoodTrackerActivity extends AppCompatActivity {
     private void loadMoodData() {
         String userId = auth.getCurrentUser().getUid();
 
-        firestore.collection("mood_logs").whereEqualTo("userId", userId).get().addOnSuccessListener(queryDocumentSnapshots -> {
+        firestore.collection("mood_logs").whereEqualTo("userId", userId).orderBy("date", com.google.firebase.firestore.Query.Direction.DESCENDING).get().addOnSuccessListener(queryDocumentSnapshots -> {
             LinearLayout layoutNoData = findViewById(R.id.layoutNoData);
             LinearLayout timelineContainer = findViewById(R.id.timelineContainer);
             PieChart moodPieChart = findViewById(R.id.moodPieChart);
@@ -95,51 +98,83 @@ public class MoodTrackerActivity extends AppCompatActivity {
                     layoutNoData.setVisibility(View.GONE);
                     timelineContainer.setVisibility(View.VISIBLE);
                     moodPieChart.setVisibility(View.VISIBLE);
-                    todayFeelText.setVisibility(View.VISIBLE);
-                    moodImageView.setVisibility(View.VISIBLE);
-                    moodTextView.setVisibility(View.VISIBLE);
-                    dateTextView.setVisibility(View.VISIBLE);
-                    moodSummaryText.setVisibility(View.VISIBLE);
 
-                    MoodLog todayMood = moodLogs.get(0);
-                    moodTextView.setText(todayMood.getMood());
-                    dateTextView.setText(todayMood.getDate());
-                    moodImageView.setImageResource(getMoodIcon(todayMood.getMood()));
+                    MoodLog latestMoodLog = moodLogs.get(0);
+
+                    if (isToday(latestMoodLog.getDate())) {
+                        todayFeelText.setText("Today I feel");
+                        moodTextView.setText(latestMoodLog.getMood());
+                        dateTextView.setText(latestMoodLog.getDate());
+                        moodImageView.setImageResource(getMoodIcon(latestMoodLog.getMood()));
+                    } else {
+                        setDefaultMoodState();
+                    }
 
                     updateWeeklyTimeline(moodLogs);
                     generateMoodPieChart(moodLogs);
                 } else {
-                    layoutNoData.setVisibility(View.VISIBLE);
-                    timelineContainer.setVisibility(View.GONE);
-                    moodPieChart.setVisibility(View.GONE);
-                    todayFeelText.setVisibility(View.GONE);
-                    moodImageView.setVisibility(View.GONE);
-                    moodTextView.setVisibility(View.GONE);
-                    dateTextView.setVisibility(View.GONE);
-                    moodSummaryText.setVisibility(View.GONE);
+                    setNoDataState();
                 }
             } else {
-                layoutNoData.setVisibility(View.VISIBLE);
-                timelineContainer.setVisibility(View.GONE);
-                moodPieChart.setVisibility(View.GONE);
-                todayFeelText.setVisibility(View.GONE);
-                moodImageView.setVisibility(View.GONE);
-                moodTextView.setVisibility(View.GONE);
-                dateTextView.setVisibility(View.GONE);
-                moodSummaryText.setVisibility(View.GONE);
+                setNoDataState();
             }
         }).addOnFailureListener(e -> {
             Toast.makeText(this, "Failed to load mood data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            findViewById(R.id.layoutNoData).setVisibility(View.VISIBLE);
-            findViewById(R.id.timelineContainer).setVisibility(View.GONE);
-            findViewById(R.id.moodPieChart).setVisibility(View.GONE);
-            findViewById(R.id.todayFeelText).setVisibility(View.GONE);
-            findViewById(R.id.moodImageView).setVisibility(View.GONE);
-            findViewById(R.id.moodTextView).setVisibility(View.GONE);
-            findViewById(R.id.dateTextView).setVisibility(View.GONE);
-            findViewById(R.id.moodSummaryText).setVisibility(View.GONE);
+            setNoDataState();
         });
     }
+
+    private boolean isToday(String dateString) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date logDate = dateFormat.parse(dateString.split(" ")[0]);
+            Calendar logCalendar = Calendar.getInstance();
+            logCalendar.setTime(logDate);
+
+            Calendar todayCalendar = Calendar.getInstance();
+
+            return logCalendar.get(Calendar.YEAR) == todayCalendar.get(Calendar.YEAR) && logCalendar.get(Calendar.DAY_OF_YEAR) == todayCalendar.get(Calendar.DAY_OF_YEAR);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private void setDefaultMoodState() {
+        TextView todayFeelText = findViewById(R.id.todayFeelText);
+        ImageView moodImageView = findViewById(R.id.moodImageView);
+        TextView moodTextView = findViewById(R.id.moodTextView);
+        TextView dateTextView = findViewById(R.id.dateTextView);
+
+        todayFeelText.setText("You haven't picked a mood yet.");
+        moodImageView.setImageResource(R.drawable.ic_mood_okay);
+
+        moodTextView.setText("");
+        dateTextView.setText("");
+    }
+
+    private void setNoDataState() {
+        LinearLayout layoutNoData = findViewById(R.id.layoutNoData);
+        LinearLayout timelineContainer = findViewById(R.id.timelineContainer);
+        PieChart moodPieChart = findViewById(R.id.moodPieChart);
+        TextView todayFeelText = findViewById(R.id.todayFeelText);
+        ImageView moodImageView = findViewById(R.id.moodImageView);
+        TextView moodTextView = findViewById(R.id.moodTextView);
+        TextView dateTextView = findViewById(R.id.dateTextView);
+        TextView moodSummaryText = findViewById(R.id.moodSummaryText);
+
+        layoutNoData.setVisibility(View.VISIBLE);
+        timelineContainer.setVisibility(View.GONE);
+        moodPieChart.setVisibility(View.GONE);
+
+        // Hide mood details
+        todayFeelText.setVisibility(View.GONE);
+        moodImageView.setVisibility(View.GONE);
+        moodTextView.setVisibility(View.GONE);
+        dateTextView.setVisibility(View.GONE);
+        moodSummaryText.setVisibility(View.GONE);
+    }
+
 
     private void updateWeeklyTimeline(List<MoodLog> moodLogs) {
         LinearLayout dayContainer = findViewById(R.id.dayContainer);
@@ -241,8 +276,25 @@ public class MoodTrackerActivity extends AppCompatActivity {
                 Color.parseColor("#80CBC4"), // Tired
                 Color.parseColor("#90CAF9")  // Bad
         });
+        pieDataSet.setSliceSpace(3f);
+        pieDataSet.setValueFormatter(new PercentFormatter(moodPieChart));
+        pieDataSet.setValueTextSize(12f);
+        pieDataSet.setValueTextColor(Color.BLACK);
+
         PieData pieData = new PieData(pieDataSet);
         moodPieChart.setData(pieData);
+
+        moodPieChart.getLegend().setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+        moodPieChart.getLegend().setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+        moodPieChart.getLegend().setOrientation(Legend.LegendOrientation.HORIZONTAL);
+        moodPieChart.getLegend().setDrawInside(false);
+        moodPieChart.getLegend().setXEntrySpace(10f);
+        moodPieChart.getLegend().setYEntrySpace(5f);
+
+        moodPieChart.getDescription().setEnabled(false);
+
+        moodPieChart.setUsePercentValues(true);
+
         moodPieChart.invalidate();
 
         String mostFrequentMood = getMostFrequentMood(moodCounts);
