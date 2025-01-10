@@ -1,8 +1,11 @@
 package com.gingerbread.asm3.Views.Message;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -144,5 +147,32 @@ public class MessageActivity extends BaseActivity {
     @Override
     protected int getSelectedMenuItemId() {
         return R.id.nav_message;
+    }
+
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if (v instanceof EditText) {
+                int[] location = new int[2];
+                v.getLocationOnScreen(location);
+                float x = event.getRawX() + v.getLeft() - location[0];
+                float y = event.getRawY() + v.getTop() - location[1];
+
+                if (x < v.getLeft() || x > v.getRight() || y < v.getTop() || y > v.getBottom()) {
+                    hideKeyboard();
+                    v.clearFocus();
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
     }
 }

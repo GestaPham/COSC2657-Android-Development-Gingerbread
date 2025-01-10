@@ -426,5 +426,4 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         intent.putExtra("memoriesJson", memoriesJson);
         startActivity(intent);
     }
-
 }

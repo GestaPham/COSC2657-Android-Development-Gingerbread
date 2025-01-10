@@ -166,7 +166,10 @@ public class MainActivity extends BaseActivity {
             textViewGreeting.setText("Hi, " + user.getName());
 
             if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
-                Glide.with(this).load(user.getProfilePictureUrl()).placeholder(R.drawable.ic_placeholder).into(imageViewProfile);
+                Glide.with(this)
+                        .load(user.getProfilePictureUrl())
+                        .placeholder(R.drawable.ic_placeholder)
+                        .into(imageViewProfile);
             } else {
                 imageViewProfile.setImageResource(R.drawable.ic_placeholder);
             }
@@ -365,55 +368,33 @@ public class MainActivity extends BaseActivity {
     private void initializeMemoryCarousel() {
         String currentUserId = auth.getCurrentUser().getUid();
 
-        relationshipService.getRelationshipByUserId(currentUserId, new RelationshipService.RelationshipCallback() {
+        calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
             @Override
-            public void onSuccess(Relationship relationship) {
-                if (relationship != null) {
-                    String relationshipId = relationship.getRelationshipId();
-
-                    calendarService.getAllMemoriesByRelationshipId(relationshipId, new CalendarService.UsersMemoriesCallback() {
-                        @Override
-                        public void onError(Exception e) {
-                            Log.e("MemoryCarousel", "Error fetching memories: ", e);
-                            Toast.makeText(MainActivity.this, "Error fetching memories", Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onMemoriesFetched(List<Memory> memories) {
-                            if (memories.isEmpty()) {
-                                // Display a placeholder message when no memories exist
-                                findViewById(R.id.viewPagerMemories).setVisibility(View.GONE);
-                                findViewById(R.id.noMemoriesTextView).setVisibility(View.VISIBLE);
-                            } else {
-                                findViewById(R.id.viewPagerMemories).setVisibility(View.VISIBLE);
-                                findViewById(R.id.noMemoriesTextView).setVisibility(View.GONE);
-
-                                memoryAdapter = new MemoryAdapter(memories, memory -> {
-                                    Intent intent = new Intent(MainActivity.this, MemoryActivity.class);
-                                    String memoriesJson = new Gson().toJson(memories);
-                                    intent.putExtra("memoriesJson", memoriesJson);
-                                    startActivity(intent);
-                                });
-
-                                viewPagerMemories.setAdapter(memoryAdapter);
-                                viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-
-                                if (memories.size() > 1) {
-                                    autoScrollMemories();
-                                }
-                            }
-                        }
-                    });
-                } else {
-                    Toast.makeText(MainActivity.this, "No relationship found", Toast.LENGTH_SHORT).show();
-                    findViewById(R.id.noMemoriesTextView).setVisibility(View.VISIBLE);
-                }
+            public void onError(Exception e) {
+                Log.e("MemoryCarousel", "Error fetching memories: ", e);
+                Toast.makeText(MainActivity.this, "Error fetching memories", Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onFailure(String errorMessage) {
-                Toast.makeText(MainActivity.this, "Error fetching relationship: " + errorMessage, Toast.LENGTH_SHORT).show();
-                findViewById(R.id.noMemoriesTextView).setVisibility(View.VISIBLE);
+            public void onMemoriesFetched(List<Memory> memories) {
+                if (memories.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "No memories to display", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                memoryAdapter = new MemoryAdapter(memories, memory -> {
+                    Intent intent = new Intent(MainActivity.this, MemoryActivity.class);
+                    String memoriesJson = new Gson().toJson(memories);
+                    intent.putExtra("memoriesJson", memoriesJson);
+                    startActivity(intent);
+                });
+
+                viewPagerMemories.setAdapter(memoryAdapter);
+                viewPagerMemories.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+
+                if (memories.size() > 1) {
+                    autoScrollMemories();
+                }
             }
         });
     }
@@ -437,6 +418,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Refresh memory carousel when the activity resumes
         initializeMemoryCarousel();
     }
 
@@ -456,32 +438,5 @@ public class MainActivity extends BaseActivity {
             default:
                 return R.drawable.ic_circle;
         }
-    }
-
-    private void hideKeyboard() {
-        View view = this.getCurrentFocus();
-        if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            View v = getCurrentFocus();
-            if (v instanceof EditText) {
-                int[] location = new int[2];
-                v.getLocationOnScreen(location);
-                float x = event.getRawX() + v.getLeft() - location[0];
-                float y = event.getRawY() + v.getTop() - location[1];
-
-                if (x < v.getLeft() || x > v.getRight() || y < v.getTop() || y > v.getBottom()) {
-                    hideKeyboard();
-                    v.clearFocus();
-                }
-            }
-        }
-        return super.dispatchTouchEvent(event);
     }
 }
