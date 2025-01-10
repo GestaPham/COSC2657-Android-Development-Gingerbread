@@ -19,6 +19,9 @@ import com.gingerbread.asm3.Services.OpenAIService;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +37,7 @@ public class ChatbotActivity extends BaseActivity {
     private RecyclerView recyclerViewChat;
     private ChatAdapter chatAdapter;
     private List<Message> messages;
-    private List<Message> conversationHistory;
+    private JSONArray conversationHistory;
     private TextView textViewPartnerName;
 
     @Override
@@ -55,7 +58,7 @@ public class ChatbotActivity extends BaseActivity {
 
         recyclerViewChat.setLayoutManager(new LinearLayoutManager(this));
         messages = new ArrayList<>();
-        conversationHistory = new ArrayList<>();
+        conversationHistory = new JSONArray();
         chatAdapter = new ChatAdapter(messages, currentUserId);
         recyclerViewChat.setAdapter(chatAdapter);
 
@@ -78,7 +81,9 @@ public class ChatbotActivity extends BaseActivity {
             runOnUiThread(() -> {
                 this.messages.clear();
                 this.messages.addAll(messages);
-                conversationHistory.addAll(messages);
+                for (Message message : messages) {
+                    addToConversationHistory(message);
+                }
                 chatAdapter.notifyDataSetChanged();
                 recyclerViewChat.scrollToPosition(this.messages.size() - 1);
             });
@@ -96,11 +101,11 @@ public class ChatbotActivity extends BaseActivity {
         }
 
         Message userMessage = new Message(text, "AI_" + currentUserId, "AI", currentUserId, System.currentTimeMillis());
+        addToConversationHistory(userMessage);
 
         messageService.sendMessage("AI_" + currentUserId, userMessage, () -> {
             runOnUiThread(() -> {
                 messages.add(userMessage);
-                conversationHistory.add(userMessage);
                 chatAdapter.notifyItemInserted(messages.size() - 1);
                 recyclerViewChat.scrollToPosition(messages.size() - 1);
                 editTextMessage.setText("");
@@ -112,15 +117,15 @@ public class ChatbotActivity extends BaseActivity {
     }
 
     private void getAIResponse() {
-        openAIService.getResponse(conversationHistory.toString(), new OpenAIService.OpenAIResponseCallback() {
+        openAIService.getAIResponse(conversationHistory.toString(), new OpenAIService.OpenAIResponseCallback() {
             @Override
             public void onSuccess(String aiResponse) {
                 Message aiMessage = new Message(aiResponse, "AI_" + currentUserId, currentUserId, "AI", System.currentTimeMillis());
+                addToConversationHistory(aiMessage);
 
                 messageService.sendMessage("AI_" + currentUserId, aiMessage, () -> {
                     runOnUiThread(() -> {
                         messages.add(aiMessage);
-                        conversationHistory.add(aiMessage);
                         chatAdapter.notifyItemInserted(messages.size() - 1);
                         recyclerViewChat.scrollToPosition(messages.size() - 1);
                     });
@@ -136,6 +141,17 @@ public class ChatbotActivity extends BaseActivity {
                 );
             }
         });
+    }
+
+    private void addToConversationHistory(Message message) {
+        try {
+            JSONObject messageJson = new JSONObject();
+            messageJson.put("role", message.getSenderId().equals(currentUserId) ? "user" : "assistant");
+            messageJson.put("content", message.getMessage());
+            conversationHistory.put(messageJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
