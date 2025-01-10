@@ -36,7 +36,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class AddEventBottomSheetDialog extends BottomSheetDialogFragment implements AdapterView.OnItemSelectedListener, DatePickerFragment.OnDateSelectedListener {
+public class AddEventBottomSheetDialog extends BottomSheetDialogFragment implements AdapterView.OnItemSelectedListener {
     private EditText eventNameInput, noteInputEvent;
     private Spinner spinnerReminder;
     private Button buttonAddEvent, buttonAddDate;
@@ -55,7 +55,9 @@ public class AddEventBottomSheetDialog extends BottomSheetDialogFragment impleme
         buttonAddDate = view.findViewById(R.id.buttonAddDate);
 
         buttonAddDate.setOnClickListener(v -> {
-            DatePickerFragment datePickerFragment = new DatePickerFragment();
+            DatePickerFragment datePickerFragment = DatePickerFragment.newInstance(selectedDate -> {
+                this.date = selectedDate;
+            });
             datePickerFragment.show(getChildFragmentManager(), "datePicker");
         });
 
@@ -83,7 +85,7 @@ public class AddEventBottomSheetDialog extends BottomSheetDialogFragment impleme
         return view;
     }
 
-    @Override
+
     public void onDateSelected(String selectedDate) {
         this.date = selectedDate;
     }
@@ -147,43 +149,37 @@ public class AddEventBottomSheetDialog extends BottomSheetDialogFragment impleme
             Toast.makeText(this.requireContext(), "Failed to add event.", Toast.LENGTH_SHORT).show();
         }
     }
+    public static class DatePickerFragment extends DialogFragment
+            implements DatePickerDialog.OnDateSetListener {
 
-}
-
-class DatePickerFragment extends DialogFragment
-        implements DatePickerDialog.OnDateSetListener {
-    interface OnDateSelectedListener {
-        void onDateSelected(String date);
-    }
-
-    private OnDateSelectedListener listener;
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        try {
-            listener = (OnDateSelectedListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString() + "no listener found");
+        public static DatePickerFragment newInstance(OnDateSelectedListener listener) {
+            DatePickerFragment fragment = new DatePickerFragment();
+            fragment.listener = listener;
+            return fragment;
         }
-    }
+        private OnDateSelectedListener listener;
+        interface OnDateSelectedListener {
+            void onDateSelected(String date);
+        }
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Calendar c = Calendar.getInstance();
+            int year = c.get(Calendar.YEAR);
+            int month = c.get(Calendar.MONTH);
+            int day = c.get(Calendar.DAY_OF_MONTH);
+            return new DatePickerDialog(requireContext(), this, year, month, day);
+        }
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        final Calendar c = Calendar.getInstance();
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        return new DatePickerDialog(requireContext(), this, year, month, day);
-    }
-
-    @Override
-    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-        String date = String.format(String.valueOf(Locale.getDefault()), year, month + 1, dayOfMonth);
-        if (listener != null) {
-            listener.onDateSelected(date);
+        @Override
+        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+            String date = String.format(String.valueOf(Locale.getDefault()), year, month + 1, dayOfMonth);
+            if (listener != null) {
+                listener.onDateSelected(date);
+            }
         }
     }
 
 }
+
+
