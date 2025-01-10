@@ -34,6 +34,7 @@ public class ChatbotActivity extends BaseActivity {
     private RecyclerView recyclerViewChat;
     private ChatAdapter chatAdapter;
     private List<Message> messages;
+    private List<Message> conversationHistory;
     private TextView textViewPartnerName;
 
     @Override
@@ -54,6 +55,7 @@ public class ChatbotActivity extends BaseActivity {
 
         recyclerViewChat.setLayoutManager(new LinearLayoutManager(this));
         messages = new ArrayList<>();
+        conversationHistory = new ArrayList<>();
         chatAdapter = new ChatAdapter(messages, currentUserId);
         recyclerViewChat.setAdapter(chatAdapter);
 
@@ -76,6 +78,7 @@ public class ChatbotActivity extends BaseActivity {
             runOnUiThread(() -> {
                 this.messages.clear();
                 this.messages.addAll(messages);
+                conversationHistory.addAll(messages);
                 chatAdapter.notifyDataSetChanged();
                 recyclerViewChat.scrollToPosition(this.messages.size() - 1);
             });
@@ -93,23 +96,37 @@ public class ChatbotActivity extends BaseActivity {
         }
 
         Message userMessage = new Message(text, "AI_" + currentUserId, "AI", currentUserId, System.currentTimeMillis());
-        messages.add(userMessage);
-        chatAdapter.notifyItemInserted(messages.size() - 1);
-        recyclerViewChat.scrollToPosition(messages.size() - 1);
 
-        editTextMessage.setText("");
+        messageService.sendMessage("AI_" + currentUserId, userMessage, () -> {
+            runOnUiThread(() -> {
+                messages.add(userMessage);
+                conversationHistory.add(userMessage);
+                chatAdapter.notifyItemInserted(messages.size() - 1);
+                recyclerViewChat.scrollToPosition(messages.size() - 1);
+                editTextMessage.setText("");
+                getAIResponse();
+            });
+        }, errorMessage -> runOnUiThread(() ->
+                Toast.makeText(ChatbotActivity.this, "Failed to send message: " + errorMessage, Toast.LENGTH_SHORT).show()
+        ));
+    }
 
-        openAIService.getDateIdea(text, new OpenAIService.OpenAIResponseCallback() {
+    private void getAIResponse() {
+        openAIService.getResponse(conversationHistory.toString(), new OpenAIService.OpenAIResponseCallback() {
             @Override
             public void onSuccess(String aiResponse) {
-                runOnUiThread(() -> {
-                    Message aiMessage = new Message(aiResponse, "AI_" + currentUserId, currentUserId, "AI", System.currentTimeMillis());
-                    messages.add(aiMessage);
-                    chatAdapter.notifyItemInserted(messages.size() - 1);
-                    recyclerViewChat.scrollToPosition(messages.size() - 1);
+                Message aiMessage = new Message(aiResponse, "AI_" + currentUserId, currentUserId, "AI", System.currentTimeMillis());
 
-                    messageService.sendMessage("AI_" + currentUserId, aiMessage, () -> {}, errorMessage -> {});
-                });
+                messageService.sendMessage("AI_" + currentUserId, aiMessage, () -> {
+                    runOnUiThread(() -> {
+                        messages.add(aiMessage);
+                        conversationHistory.add(aiMessage);
+                        chatAdapter.notifyItemInserted(messages.size() - 1);
+                        recyclerViewChat.scrollToPosition(messages.size() - 1);
+                    });
+                }, errorMessage -> runOnUiThread(() ->
+                        Toast.makeText(ChatbotActivity.this, "Failed to save AI response: " + errorMessage, Toast.LENGTH_SHORT).show()
+                ));
             }
 
             @Override

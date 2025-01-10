@@ -25,7 +25,7 @@ public class OpenAIService {
         void onFailure(String errorMessage);
     }
 
-    public void getDateIdea(String userInput, OpenAIResponseCallback callback) {
+    public void getResponse(String userInput, OpenAIResponseCallback callback) {
         new Thread(() -> {
             int retries = 0;
             int maxRetries = 5;
@@ -33,51 +33,16 @@ public class OpenAIService {
 
             while (retries < maxRetries) {
                 try {
-                    JSONObject payload = new JSONObject();
-                    payload.put("model", "gpt-4o-mini");
-                    JSONArray messages = new JSONArray();
+                    JSONObject payload = createPayload(userInput);
+                    HttpURLConnection connection = setupConnection();
 
-                    messages.put(new JSONObject().put("role", "system")
-                            .put("content", "I am a love advice expert. Only suggest romantic and creative date ideas. If the input is invalid, respond with: 'Sorry, I can only give you date ideas.'"));
-
-                    messages.put(new JSONObject().put("role", "user").put("content", userInput));
-
-                    payload.put("messages", messages);
-                    payload.put("max_tokens", 100);
-                    payload.put("temperature", 0.7);
-
-                    URL url = new URL(API_URL);
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("POST");
-                    connection.setRequestProperty("Authorization", "Bearer " + API_KEY);
-                    connection.setRequestProperty("Content-Type", "application/json");
-                    connection.setDoOutput(true);
-
-                    OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-                    writer.write(payload.toString());
-                    writer.flush();
-                    writer.close();
+                    sendPayload(connection, payload);
 
                     int responseCode = connection.getResponseCode();
                     if (responseCode == HttpURLConnection.HTTP_OK) {
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                        StringBuilder response = new StringBuilder();
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            response.append(line);
-                        }
-                        reader.close();
-
-                        JSONObject responseObject = new JSONObject(response.toString());
-                        JSONArray choices = responseObject.getJSONArray("choices");
-                        if (choices.length() > 0) {
-                            String content = choices.getJSONObject(0).getJSONObject("message").getString("content");
-                            postToMainThread(() -> callback.onSuccess(content.trim()));
-                            return;
-                        } else {
-                            postToMainThread(() -> callback.onFailure("No response received from OpenAI."));
-                            return;
-                        }
+                        String response = getResponse(connection);
+                        processResponse(response, callback);
+                        return;
                     } else if (responseCode == 429) {
                         Log.w(TAG, "Rate limit reached. Retrying...");
                         retries++;
@@ -95,6 +60,66 @@ public class OpenAIService {
             }
             postToMainThread(() -> callback.onFailure("Max retries reached. Please try again later."));
         }).start();
+    }
+
+    private JSONObject createPayload(String userInput) throws Exception {
+        JSONObject payload = new JSONObject();
+        payload.put("model", "gpt-4o-mini");
+        JSONArray messages = new JSONArray();
+
+        messages.put(new JSONObject().put("role", "system")
+                .put("content", "I am a love advice expert. Only suggest romantic and creative date ideas. If the input is invalid, respond with: 'Sorry, I can only give you date ideas.'"));
+
+        messages.put(new JSONObject().put("role", "user").put("content", userInput));
+
+        payload.put("messages", messages);
+        payload.put("max_tokens", 100);
+        payload.put("temperature", 0.7);
+
+        return payload;
+    }
+
+    private HttpURLConnection setupConnection() throws Exception {
+        URL url = new URL(API_URL);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Authorization", "Bearer " + API_KEY);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setDoOutput(true);
+        return connection;
+    }
+
+    private void sendPayload(HttpURLConnection connection, JSONObject payload) throws Exception {
+        OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+        writer.write(payload.toString());
+        writer.flush();
+        writer.close();
+    }
+
+    private String getResponse(HttpURLConnection connection) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            response.append(line);
+        }
+        reader.close();
+        return response.toString();
+    }
+
+    private void processResponse(String response, OpenAIResponseCallback callback) {
+        try {
+            JSONObject responseObject = new JSONObject(response);
+            JSONArray choices = responseObject.getJSONArray("choices");
+            if (choices.length() > 0) {
+                String content = choices.getJSONObject(0).getJSONObject("message").getString("content");
+                postToMainThread(() -> callback.onSuccess(content.trim()));
+            } else {
+                postToMainThread(() -> callback.onFailure("No response received from OpenAI."));
+            }
+        } catch (Exception e) {
+            postToMainThread(() -> callback.onFailure("Error parsing response: " + e.getMessage()));
+        }
     }
 
     private void postToMainThread(Runnable runnable) {
