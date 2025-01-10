@@ -53,7 +53,7 @@ public class AddEventBottomSheetDialog extends BottomSheetDialogFragment impleme
             String date = eventDateInput.getText().toString();
             String name = eventNameInput.getText().toString();
             String note = noteInputEvent.getText().toString();
-            addEvent(name,);
+            addEvent(name,date,note);
         });
 
         return super.onCreateView(inflater, container, savedInstanceState);
@@ -87,8 +87,8 @@ public class AddEventBottomSheetDialog extends BottomSheetDialogFragment impleme
         ContentValues eventValues = new ContentValues();
         eventValues.put(CalendarContract.Events.CALENDAR_ID, 1);
         eventValues.put(CalendarContract.Events.TITLE, title);
-        eventValues.put(CalendarContract.Events.DESCRIPTION, description);
-        eventValues.put(CalendarContract.Events.EVENT_LOCATION, location);
+        //eventValues.put(CalendarContract.Events.DESCRIPTION, description);
+        //eventValues.put(CalendarContract.Events.EVENT_LOCATION, location);
         eventValues.put(CalendarContract.Events.DTSTART, startTime);
         eventValues.put(CalendarContract.Events.DTEND, endTime);
         //eventValues.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
