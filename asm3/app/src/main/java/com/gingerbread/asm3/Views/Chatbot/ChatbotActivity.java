@@ -81,14 +81,40 @@ public class ChatbotActivity extends BaseActivity {
             runOnUiThread(() -> {
                 this.messages.clear();
                 this.messages.addAll(messages);
-                for (Message message : messages) {
-                    addToConversationHistory(message);
+
+                if (messages.isEmpty()) {
+                    sendInitialAIMessage(conversationId);
+                } else {
+                    for (Message message : messages) {
+                        addToConversationHistory(message);
+                    }
+                    chatAdapter.notifyDataSetChanged();
+                    recyclerViewChat.scrollToPosition(this.messages.size() - 1);
                 }
-                chatAdapter.notifyDataSetChanged();
-                recyclerViewChat.scrollToPosition(this.messages.size() - 1);
+            });
+        }, errorMessage -> {
+        });
+    }
+
+    private void sendInitialAIMessage(String conversationId) {
+        String initialMessageContent = "Hi there! I'm here to help you with any love or relationship advice you need. Feel free to ask me anything!";
+        Message initialMessage = new Message(
+                initialMessageContent,
+                conversationId,
+                currentUserId,
+                "AI",
+                System.currentTimeMillis()
+        );
+
+        messageService.sendMessage(conversationId, initialMessage, () -> {
+            runOnUiThread(() -> {
+                messages.add(initialMessage);
+                addToConversationHistory(initialMessage);
+                chatAdapter.notifyItemInserted(messages.size() - 1);
+                recyclerViewChat.scrollToPosition(messages.size() - 1);
             });
         }, errorMessage -> runOnUiThread(() ->
-                Toast.makeText(ChatbotActivity.this, "Error loading chat: " + errorMessage, Toast.LENGTH_SHORT).show()
+                Toast.makeText(ChatbotActivity.this, "Failed to send initial message: " + errorMessage, Toast.LENGTH_SHORT).show()
         ));
     }
 
