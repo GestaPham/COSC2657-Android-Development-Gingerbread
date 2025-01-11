@@ -11,9 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.gingerbread.asm3.Models.Event;
 import com.gingerbread.asm3.R;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
 
@@ -40,32 +38,34 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
         Event event = eventList.get(position);
 
-        holder.textEventTitle.setText(event.getEventName());
-        holder.textEventDate.setText(event.getEventDate());
-        holder.textEventDescription.setText(event.getEventDescription());
+        holder.eventTitle.setText(event.getEventName());
+        holder.eventDescription.setText(event.getEventDescription());
+        holder.eventDate.setText(formatDate(event.getEventDate()));
 
-        holder.itemView.setOnClickListener(v -> listener.onEventClick(event));
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onEventClick(event);
+            }
+        });
     }
-
 
     @Override
     public int getItemCount() {
         return eventList.size();
     }
 
-    private String formatDate(long timestamp) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault());
-        return sdf.format(timestamp);
+    private String formatDate(String dateString) {
+        return dateString;
     }
 
     static class EventViewHolder extends RecyclerView.ViewHolder {
-        TextView textEventTitle, textEventDate, textEventDescription;
+        TextView eventTitle, eventDescription, eventDate;
 
         public EventViewHolder(@NonNull View itemView) {
             super(itemView);
-            textEventTitle = itemView.findViewById(R.id.textEventTitle);
-            textEventDate = itemView.findViewById(R.id.textEventDate);
-            textEventDescription = itemView.findViewById(R.id.textEventDescription);
+            eventTitle = itemView.findViewById(R.id.textEventTitle);
+            eventDescription = itemView.findViewById(R.id.textEventDescription);
+            eventDate = itemView.findViewById(R.id.textEventDate);
         }
     }
 }

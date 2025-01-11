@@ -1,92 +1,87 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/light_background"
+    android:padding="24dp">
 
-    <TextView
-        android:id="@+id/textViewNewEvent"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="New Event"
-        android:textSize="18sp"
-        android:textColor="@android:color/black"
-        android:layout_marginBottom="16dp" />
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textViewEventName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Event Name"
-        android:textColor="@android:color/black"
-        android:layout_marginBottom="8dp"/>
+        <TextView
+            android:id="@+id/modalTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="New Event"
+            android:textColor="@color/light_blue"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
-    <EditText
-        android:id="@+id/eventNameInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter event name"
-        android:inputType="text"
-        android:padding="12dp"
-        android:layout_marginBottom="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Event Name"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
 
-    <TextView
-        android:id="@+id/textViewEventDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Date of Event"
-        android:textColor="@android:color/black"
-        android:layout_marginBottom="8dp"/>
+        <EditText
+            android:id="@+id/eventNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/custom_text_bg"
+            android:hint="Enter event name"
+            android:inputType="text"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
 
-    <Button
-        android:id="@+id/buttonAddDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@color/light_pink"
-        android:textColor="@android:color/white"
-        android:text="Date"
-        android:layout_marginTop="12dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Event Date"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
 
-    <TextView
-        android:id="@+id/textViewRemind"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Remind"
-        android:textColor="@android:color/black"
-        android:layout_marginBottom="8dp"/>
+        <EditText
+            android:id="@+id/eventDateInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/custom_text_bg"
+            android:hint="Day/Month/Year"
+            android:inputType="date"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
 
-    <Spinner
-        android:id="@+id/spinnerReminder"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Event Description"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
 
-    <TextView
-        android:id="@+id/textViewAddNote"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add Note"
-        android:textColor="@android:color/black"
-        android:layout_marginBottom="8dp"/>
+        <EditText
+            android:id="@+id/eventDescriptionInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/custom_text_bg"
+            android:hint="Enter description (Optional)"
+            android:inputType="text"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
 
-    <EditText
-        android:id="@+id/noteInputEvent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter event note (Optional)"
-        android:inputType="text"
-        android:padding="12dp"
-        android:layout_marginBottom="16dp" />
+        <Button
+            android:id="@+id/buttonAddEventModal"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/light_pink"
+            android:text="Create Event"
+            android:textColor="@android:color/white" />
 
-    <Button
-        android:id="@+id/buttonAddEvent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Create"
-        android:backgroundTint="@color/light_pink"
-        android:textColor="@android:color/white"
-        android:layout_marginTop="12dp" />
-
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

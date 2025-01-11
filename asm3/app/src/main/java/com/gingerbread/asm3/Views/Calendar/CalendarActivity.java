@@ -1,7 +1,5 @@
 package com.gingerbread.asm3.Views.Calendar;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -43,13 +41,19 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
-public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener, MemoryAdapter.OnMemoryClickListener,AddEventBottomSheetDialog.AddEventListener {
+public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener, MemoryAdapter.OnMemoryClickListener {
+
+
     private CalendarView calendarView;
     private ImageButton addMemoryButton2, addEventButton2;
     private long selectedDate;
@@ -69,6 +73,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private String argUserSharedToken;
     private List<Event> eventList;
     private EventAdapter eventAdapter;
+    private HashMap<Long, Boolean> eventDates = new HashMap<>();
 
 
     Gson gson = new Gson();
@@ -89,11 +94,9 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         RecyclerView recyclerViewEvents = findViewById(R.id.recyclerViewEvents);
         recyclerViewEvents.setLayoutManager(new LinearLayoutManager(this));
 
-        // Initialize event list and adapter
         eventList = new ArrayList<>();
         eventAdapter = new EventAdapter(eventList, event -> {
             // Handle event click
-            Toast.makeText(this, "Clicked: " + event.getEventName(), Toast.LENGTH_SHORT).show();
         });
 
         recyclerViewEvents.setAdapter(eventAdapter);
@@ -102,24 +105,45 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
         ViewPager2 viewPagerMemories = findViewById(R.id.viewPagerMemories);
 
-        // Use the shared userMemories list for the adapter
         memoryAdapter = new MemoryAdapter(userMemories, this);
         viewPagerMemories.setAdapter(memoryAdapter);
 
-        // Fetch memories for current user
         fetchUsersMemories(currentUser.getUid(), null);
 
         memoryAdapter = new MemoryAdapter(userMemories, this);
 
-        calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
-            @Override
-            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
-                selectedDate = new GregorianCalendar(year, month, dayOfMonth).getTimeInMillis();
-                Toast.makeText(CalendarActivity.this, "Selected Date: " + dayOfMonth + "/" + (month + 1) + "/" + year, Toast.LENGTH_SHORT).show();
-            }
+        calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
+            selectedDate = new GregorianCalendar(year, month, dayOfMonth).getTimeInMillis();
+            fetchEventsForDate(selectedDate);
         });
 
-        addEventButton2.setOnClickListener(v -> addEvent());
+        addEventButton2.setOnClickListener(v -> {
+            AddEventBottomSheetDialog dialog = new AddEventBottomSheetDialog();
+
+            Bundle bundle = new Bundle();
+            bundle.putString("selectedDate", new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate));
+            dialog.setArguments(bundle);
+
+            dialog.setAddEventListener((name, date, description) -> {
+                getRelationshipId(new RelationshipIdCallback() {
+                    @Override
+                    public void onSuccess(String relationshipId) {
+                        Event event = new Event(UUID.randomUUID().toString(), currentUser.getUid(), relationshipId, name, date, description, null);
+
+                        calendarService.addEvent(event, CalendarActivity.this);
+                        fetchEventsForDate(selectedDate);
+                    }
+
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+
+            dialog.show(getSupportFragmentManager(), "AddEventBottomSheetDialog");
+        });
+
         addMemoryButton2.setOnClickListener(v -> addMemory());
         viewAll.setOnClickListener(v -> {
             fetchUsersMemories(currentUser.getUid(), () -> {
@@ -129,39 +153,141 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
                 intent.putExtra("memoriesJson", memoriesJson);
                 startActivity(intent);
             });
-            
+
+
         });
         fetchEventsForDate(selectedDate);
     }
 
-    private void fetchEventsForDate(long selectedDate) {
-        calendarService.getAllEvents(currentUser.getUid(), new CalendarService.EventsCallback() {
+    private void markEventsOnCalendar() {
+        getRelationshipId(new RelationshipIdCallback() {
             @Override
-            public void onSuccess(List<Event> events) {
-                if (eventList != null) {
-                    eventList.clear();
-                    eventList.addAll(events);
-                    eventAdapter.notifyDataSetChanged();
-
-                    TextView noEventsText = findViewById(R.id.noEventsText);
-                    if (eventList.isEmpty()) {
-                        noEventsText.setVisibility(View.VISIBLE);
-                    } else {
-                        noEventsText.setVisibility(View.GONE);
+            public void onSuccess(String relationshipId) {
+                calendarService.getAllEvents(currentUser.getUid(), new CalendarService.EventsCallback() {
+                    @Override
+                    public void onSuccess(List<Event> events) {
+                        eventDates.clear();
+                        for (Event event : events) {
+                            try {
+                                Date eventDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(event.getEventDate());
+                                if (eventDate != null) {
+                                    eventDates.put(eventDate.getTime(), true);
+                                }
+                            } catch (Exception e) {
+                                Log.e("CalendarActivity", "Error parsing event date", e);
+                            }
+                        }
+                        updateCalendarView();
                     }
-                }
+
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        Toast.makeText(CalendarActivity.this, "Error fetching events: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                Toast.makeText(CalendarActivity.this, "Error fetching events: " + errorMessage, Toast.LENGTH_SHORT).show();
+                Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void addEvent(){
-        AddEventBottomSheetDialog addEventBottomSheetDialog = new AddEventBottomSheetDialog();
-        addEventBottomSheetDialog.show(getSupportFragmentManager(),"AddEventBottomSheet");
+    private void updateCalendarView() {
+        calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+            @Override
+            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
+                long date = new GregorianCalendar(year, month, dayOfMonth).getTimeInMillis();
+                if (eventDates.containsKey(date)) {
+                    Toast.makeText(CalendarActivity.this, "Event on " + dayOfMonth + "/" + (month + 1) + "/" + year, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+
+    private void getRelationshipId(RelationshipIdCallback callback) {
+        if (relationshipId != null) {
+            callback.onSuccess(relationshipId);
+            return;
+        }
+
+        if (currentUser == null || currentUser.getUid() == null) {
+            callback.onFailure("User is not logged in or UID is null");
+            return;
+        }
+
+        FirebaseFirestore.getInstance().collection("users").document(currentUser.getUid()).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                String userShareToken = documentSnapshot.getString("shareToken");
+                if (userShareToken != null && userShareToken.startsWith("LINKED")) {
+                    relationshipService.getRelationshipByShareToken(userShareToken, new RelationshipService.RelationshipCallback() {
+                        @Override
+                        public void onSuccess(Relationship relationship) {
+                            if (relationship != null) {
+                                relationshipId = relationship.getRelationshipId();
+                                callback.onSuccess(relationshipId);
+                            } else {
+                                callback.onFailure("No relationship found for the shareToken");
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            callback.onFailure("Failed to fetch relationship: " + errorMessage);
+                        }
+                    });
+                } else {
+                    callback.onFailure("No valid shareToken found for the current user");
+                }
+            } else {
+                callback.onFailure("User document does not exist");
+            }
+        }).addOnFailureListener(e -> callback.onFailure("Error fetching user document: " + e.getMessage()));
+    }
+
+    public interface RelationshipIdCallback {
+        void onSuccess(String relationshipId);
+
+        void onFailure(String errorMessage);
+    }
+
+    private void fetchEventsForDate(long selectedDate) {
+        getRelationshipId(new RelationshipIdCallback() {
+            @Override
+            public void onSuccess(String relationshipId) {
+                String formattedDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate);
+
+                calendarService.getEventsByDate(formattedDate, relationshipId, new CalendarService.EventsCallback() {
+                    @Override
+                    public void onSuccess(List<Event> events) {
+                        if (eventList != null) {
+                            eventList.clear();
+                            eventList.addAll(events);
+                            eventAdapter.notifyDataSetChanged();
+
+                            TextView noEventsText = findViewById(R.id.noEventsText);
+                            if (eventList.isEmpty()) {
+                                noEventsText.setVisibility(View.VISIBLE);
+                            } else {
+                                noEventsText.setVisibility(View.GONE);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        Toast.makeText(CalendarActivity.this, "Error fetching events: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(CalendarActivity.this, "Unable to fetch relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void addMemory() {
@@ -200,23 +326,19 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
     private void addNewMemory(String name, String note, String date, String imageUrl, String userId, String relationshipId) {
         Memory newMemory = new Memory();
-        newMemory.setNote(note);
         newMemory.setMemoryName(name);
+        newMemory.setNote(note);
         newMemory.setDate(date);
         newMemory.setImageUrl(imageUrl);
         newMemory.setUserId(userId);
         newMemory.setRelationshipId(relationshipId);
-        calendarService.addMemory(newMemory, this);
-    }
-    private void addNewEvent(String name,String note,String reminder,String description,String date){
-        Event newEvent = new Event();
-        newEvent.setEventDate(date);
-        newEvent.setEventName(name);
-        newEvent.setEventDescription(description);
-        newEvent.setEventNote(note);
 
-        calendarService.addEvent(newEvent,this);
+        calendarService.addMemory(newMemory, CalendarActivity.this, () -> {
+            fetchUsersMemories(currentUser.getUid(), null);
+        });
     }
+
+
     @Override
     protected int getLayoutId() {
         return R.layout.activity_base;
@@ -226,6 +348,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     protected int getSelectedMenuItemId() {
         return R.id.nav_calendar;
     }
+
 
     @Override
     public void onMemoryAdded(String name, String note, String date, String imageUrl) {
@@ -238,7 +361,10 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         } else {
             addNewMemory(name, note, date, imageUrl, currentUser.getUid(), "");
         }
+
+        fetchUsersMemories(currentUser.getUid(), null);
     }
+
 
     private void getCurrentUserRelationship() {
         userService.getUser(currentUser.getUid(), new UserService.UserCallback() {
@@ -284,8 +410,4 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         startActivity(intent);
     }
 
-    @Override
-    public void onEventAdded(String date, String name, String note) {
-        Toast.makeText(this, "Event added: " + name + " on " + date, Toast.LENGTH_SHORT).show();
-    }
 }
