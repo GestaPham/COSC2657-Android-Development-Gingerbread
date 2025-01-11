@@ -119,7 +119,7 @@ public class MessageActivity extends BaseActivity {
             this.messages.addAll(messages);
             chatAdapter.notifyDataSetChanged();
             recyclerViewChat.scrollToPosition(this.messages.size() - 1);
-        }, errorMessage -> Toast.makeText(this, "Failed to load messages: " + errorMessage, Toast.LENGTH_SHORT).show());
+        }, errorMessage -> {});
     }
 
     private void sendMessage() {
