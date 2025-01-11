@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.gingerbread.asm3.Adapter.ChatAdapter;
 import com.gingerbread.asm3.Models.Message;
+import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.MessageService;
 import com.gingerbread.asm3.Services.OpenAIService;
@@ -34,6 +35,8 @@ public class ChatbotActivity extends BaseActivity {
     private OpenAIService openAIService;
 
     private String currentUserId;
+    private User currentUser;
+
     private EditText editTextMessage;
     private ImageButton buttonSend;
     private RecyclerView recyclerViewChat;
@@ -66,12 +69,38 @@ public class ChatbotActivity extends BaseActivity {
         chatAdapter = new ChatAdapter(messages, currentUserId);
         recyclerViewChat.setAdapter(chatAdapter);
 
-        loadChatbotDetails();
+        loadCurrentUserAndChatbotDetails();
+
         buttonSend.setOnClickListener(v -> sendMessage());
     }
 
+    private void loadCurrentUserAndChatbotDetails() {
+        if (currentUserId != null) {
+            userService.getUser(currentUserId, new UserService.UserCallback() {
+                @Override
+                public void onSuccess(java.util.Map<String, Object> userData) {
+                    currentUser = new User();
+                    currentUser.setUserId(currentUserId);
+                    currentUser.setName(userData.get("name") != null ? userData.get("name").toString() : "");
+                    currentUser.setPremium(userData.get("premium") != null && (boolean) userData.get("premium"));
+                    loadChatbotDetails();
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                    Toast.makeText(ChatbotActivity.this,
+                            "Failed to load user data: " + errorMessage,
+                            Toast.LENGTH_SHORT).show();
+                    loadChatbotDetails();
+                }
+            });
+        } else {
+            loadChatbotDetails();
+        }
+    }
+
     private void loadChatbotDetails() {
-        textViewPartnerName.setText("AI Date Advisor");
+        textViewPartnerName.setText("AI Relationship Consultant");
         textViewPartnerName.setVisibility(View.VISIBLE);
         loadChat();
     }
@@ -202,7 +231,12 @@ public class ChatbotActivity extends BaseActivity {
     }
 
     private void checkMessageLimit(int userMessageCount) {
-        if (userMessageCount >= 10) {
+        int maxMessages = 10;
+        if (currentUser != null && currentUser.isPremium()) {
+            maxMessages = 100;
+        }
+
+        if (userMessageCount >= maxMessages) {
             editTextMessage.setText("Message limit reached for today!");
             editTextMessage.setEnabled(false);
             buttonSend.setEnabled(false);

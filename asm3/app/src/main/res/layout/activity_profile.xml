@@ -81,6 +81,16 @@
                 android:text="Help Center"
                 android:textColor="@android:color/white"
                 android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/buttonUpgradePremium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="@color/light_pink"
+                android:text="Upgrade to Premium Status"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
         </LinearLayout>
     </ScrollView>
 

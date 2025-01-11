@@ -37,7 +37,7 @@ android {
 
 dependencies {
     implementation(libs.android.volley)
-    implementation("com.google.firebase:firebase-storage:20.2.1")
+    implementation(libs.firebase.storage.v2021)
     implementation(libs.glide)
     implementation(libs.mpandroidchart)
     implementation(platform(libs.firebase.bom))
@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.volley)
     implementation(libs.firebase.functions)
     implementation(libs.gson)
+    implementation(libs.stripe.android)
 
     implementation(libs.appcompat)
     implementation(libs.material)

@@ -297,29 +297,46 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     }
 
     private void fetchUsersMemories(String currentUserId, Runnable onComplete) {
-        calendarService.getAllMemories(currentUserId, new CalendarService.UsersMemoriesCallback() {
+        getRelationshipId(new RelationshipIdCallback() {
             @Override
-            public void onError(Exception e) {
-                Log.e("UsersMemoryCallback", "Error fetching memory: ", e);
-                Toast.makeText(CalendarActivity.this, "Error fetching memories", Toast.LENGTH_SHORT).show();
+            public void onSuccess(String relationshipId) {
+                calendarService.getAllMemoriesByRelationshipId(relationshipId, new CalendarService.UsersMemoriesCallback() {
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e("UsersMemoryCallback", "Error fetching memories: ", e);
+                        Toast.makeText(CalendarActivity.this, "Error fetching memories", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onMemoriesFetched(List<Memory> memories) {
+                        List<Memory> filteredMemories = new ArrayList<>();
+                        for (Memory memory : memories) {
+                            if (memory.getRelationshipId().equals(relationshipId)) {
+                                filteredMemories.add(memory);
+                            }
+                        }
+
+                        userMemories.clear();
+                        userMemories.addAll(filteredMemories);
+                        memoryAdapter.notifyDataSetChanged();
+
+                        TextView noMemoriesText = findViewById(R.id.noMemoriesText);
+                        if (userMemories.isEmpty()) {
+                            noMemoriesText.setVisibility(View.VISIBLE);
+                        } else {
+                            noMemoriesText.setVisibility(View.GONE);
+                        }
+
+                        if (onComplete != null) {
+                            onComplete.run();
+                        }
+                    }
+                });
             }
 
             @Override
-            public void onMemoriesFetched(List<Memory> memories) {
-                userMemories.clear();
-                userMemories.addAll(memories);
-                memoryAdapter.notifyDataSetChanged();
-
-                TextView noMemoriesText = findViewById(R.id.noMemoriesText);
-                if (userMemories.isEmpty()) {
-                    noMemoriesText.setVisibility(View.VISIBLE);
-                } else {
-                    noMemoriesText.setVisibility(View.GONE);
-                }
-
-                if (onComplete != null) {
-                    onComplete.run();
-                }
+            public void onFailure(String errorMessage) {
+                Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -409,5 +426,4 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         intent.putExtra("memoriesJson", memoriesJson);
         startActivity(intent);
     }
-
 }
