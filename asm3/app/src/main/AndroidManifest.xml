@@ -20,6 +20,9 @@
         android:theme="@style/Base.Theme.Asm"
         tools:targetApi="31">
         <activity
+            android:name=".Views.Profile.WebViewActivity"
+            android:exported="false" />
+        <activity
             android:name=".Views.Calendar.AddEventBottomSheetDialog"
             android:exported="false" />
         <activity

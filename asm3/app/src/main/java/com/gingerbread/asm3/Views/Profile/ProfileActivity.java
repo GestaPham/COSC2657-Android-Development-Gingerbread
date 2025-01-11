@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
@@ -24,7 +25,7 @@ public class ProfileActivity extends BaseActivity {
 
     private ImageView profileImageView;
     private TextView textViewName, textViewPremiumStatus;
-    private Button buttonMyPartner, buttonProfileDetails, buttonSupport, buttonLogout;
+    private Button buttonMyPartner, buttonProfileDetails, buttonSupport, buttonUpgradePremium, buttonLogout;
 
     private UserService userService;
     private User user;
@@ -51,6 +52,7 @@ public class ProfileActivity extends BaseActivity {
         buttonProfileDetails = findViewById(R.id.buttonProfileDetails);
         buttonSupport = findViewById(R.id.buttonSupport);
         buttonLogout = findViewById(R.id.buttonLogout);
+        buttonUpgradePremium = findViewById(R.id.buttonUpgradePremium);
 
         loadUserProfile();
 
@@ -69,6 +71,8 @@ public class ProfileActivity extends BaseActivity {
             Intent intent = new Intent(ProfileActivity.this, HelpCenterActivity.class);
             startActivity(intent);
         });
+
+        buttonUpgradePremium.setOnClickListener(v -> showUpgradePremiumDialog());
 
         buttonLogout.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
@@ -105,6 +109,27 @@ public class ProfileActivity extends BaseActivity {
                 }
             });
         }
+    }
+
+    private void showUpgradePremiumDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_upgrade_premium, null);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        dialogView.findViewById(R.id.buttonPurchasePremium).setOnClickListener(view -> {
+            openStripePaymentPage();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private void openStripePaymentPage() {
+        Intent intent = new Intent(this, WebViewActivity.class);
+        intent.putExtra("url", "https://buy.stripe.com/test_8wMdUC63Lbgv5u86oo");
+        startActivity(intent);
     }
 
     @Override
