@@ -42,6 +42,8 @@ public class ChatbotActivity extends BaseActivity {
     private JSONArray conversationHistory;
     private TextView textViewPartnerName;
 
+    private int userMessageCount = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,14 +88,19 @@ public class ChatbotActivity extends BaseActivity {
                 this.messages.clear();
                 this.messages.addAll(messages);
 
+                for (Message message : messages) {
+                    if (message.getSenderId().equals(currentUserId)) {
+                        userMessageCount++;
+                    }
+                    addToConversationHistory(message);
+                }
+
+                checkMessageLimit(userMessageCount);
+                chatAdapter.notifyDataSetChanged();
+                recyclerViewChat.scrollToPosition(this.messages.size() - 1);
+
                 if (messages.isEmpty()) {
                     sendInitialAIMessage(conversationId);
-                } else {
-                    for (Message message : messages) {
-                        addToConversationHistory(message);
-                    }
-                    chatAdapter.notifyDataSetChanged();
-                    recyclerViewChat.scrollToPosition(this.messages.size() - 1);
                 }
             });
         }, errorMessage -> {
@@ -142,6 +149,10 @@ public class ChatbotActivity extends BaseActivity {
                 chatAdapter.notifyItemInserted(messages.size() - 1);
                 recyclerViewChat.scrollToPosition(messages.size() - 1);
                 editTextMessage.setText("");
+
+                userMessageCount++;
+                checkMessageLimit(userMessageCount);
+
                 getAIResponse();
             });
         }, errorMessage -> runOnUiThread(() ->
@@ -150,13 +161,16 @@ public class ChatbotActivity extends BaseActivity {
     }
 
     private void getAIResponse() {
+        String todayDate = new SimpleDateFormat("dd-MM-yy").format(new Date());
+        String conversationId = "AI_" + currentUserId + "_" + todayDate;
+
         openAIService.getAIResponse(conversationHistory.toString(), new OpenAIService.OpenAIResponseCallback() {
             @Override
             public void onSuccess(String aiResponse) {
-                Message aiMessage = new Message(aiResponse, "AI_" + currentUserId, currentUserId, "AI", System.currentTimeMillis());
+                Message aiMessage = new Message(aiResponse, conversationId, currentUserId, "AI", System.currentTimeMillis());
                 addToConversationHistory(aiMessage);
 
-                messageService.sendMessage("AI_" + currentUserId, aiMessage, () -> {
+                messageService.sendMessage(conversationId, aiMessage, () -> {
                     runOnUiThread(() -> {
                         messages.add(aiMessage);
                         chatAdapter.notifyItemInserted(messages.size() - 1);
@@ -184,6 +198,21 @@ public class ChatbotActivity extends BaseActivity {
             conversationHistory.put(messageJson);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void checkMessageLimit(int userMessageCount) {
+        if (userMessageCount >= 10) {
+            editTextMessage.setText("Message limit reached for today!");
+            editTextMessage.setEnabled(false);
+            buttonSend.setEnabled(false);
+            buttonSend.setBackgroundTintList(null);
+            Toast.makeText(this, "Message limit reached for today!", Toast.LENGTH_SHORT).show();
+        } else {
+            editTextMessage.setText("");
+            editTextMessage.setEnabled(true);
+            buttonSend.setEnabled(true);
+            buttonSend.setBackgroundTintList(getResources().getColorStateList(R.color.light_pink));
         }
     }
 

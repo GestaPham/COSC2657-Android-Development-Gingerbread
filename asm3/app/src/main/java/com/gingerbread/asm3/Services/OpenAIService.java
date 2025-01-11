@@ -79,8 +79,8 @@ public class OpenAIService {
 
         JSONArray messages = new JSONArray(conversationHistory);
         payload.put("messages", messages);
-        payload.put("max_tokens", 100);
-        payload.put("temperature", 0.7);
+        payload.put("max_tokens", 1000);
+        payload.put("temperature", 0.8);
 
         return payload;
     }
