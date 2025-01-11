@@ -100,7 +100,7 @@ public class ChatbotActivity extends BaseActivity {
     }
 
     private void loadChatbotDetails() {
-        textViewPartnerName.setText("AI Date Advisor");
+        textViewPartnerName.setText("AI Relationship Consultant");
         textViewPartnerName.setVisibility(View.VISIBLE);
         loadChat();
     }
