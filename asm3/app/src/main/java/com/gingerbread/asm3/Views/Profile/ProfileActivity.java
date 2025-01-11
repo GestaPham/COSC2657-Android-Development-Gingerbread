@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -92,15 +93,13 @@ public class ProfileActivity extends BaseActivity {
                     user = new User();
                     user.setUserId(userId);
                     user.setName(userData.get("name") != null ? userData.get("name").toString() : "");
-                    user.setAge(userData.get("age") != null ? (int) ((long) userData.get("age")) : 0);
-                    user.setGender(userData.get("gender") != null ? userData.get("gender").toString() : "");
-                    user.setNationality(userData.get("nationality") != null ? userData.get("nationality").toString() : "");
-                    user.setReligion(userData.get("religion") != null ? userData.get("religion").toString() : "");
-                    user.setLocation(userData.get("location") != null ? userData.get("location").toString() : "");
                     user.setPremium(userData.get("isPremium") != null && (boolean) userData.get("isPremium"));
+                    user.setShareToken(userData.get("shareToken") != null ? userData.get("shareToken").toString() : "");
 
                     textViewName.setText(user.getName());
                     textViewPremiumStatus.setVisibility(user.isPremium() ? View.VISIBLE : View.GONE);
+
+                    buttonUpgradePremium.setVisibility(user.isPremium() ? View.GONE : View.VISIBLE);
                 }
 
                 @Override
@@ -129,7 +128,53 @@ public class ProfileActivity extends BaseActivity {
     private void openStripePaymentPage() {
         Intent intent = new Intent(this, WebViewActivity.class);
         intent.putExtra("url", "https://buy.stripe.com/test_8wMdUC63Lbgv5u86oo");
-        startActivity(intent);
+        startActivityForResult(intent, 1001);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1001 && resultCode == RESULT_OK) {
+            updatePremiumStatusForBothUsers();
+        }
+    }
+
+    private void updatePremiumStatusForBothUsers() {
+        if (user == null || user.getShareToken() == null || !user.getShareToken().startsWith("LINKED_")) {
+            Toast.makeText(this, "No valid relationship found to update premium status.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String[] tokens = user.getShareToken().split("_");
+        if (tokens.length != 3) {
+            Toast.makeText(this, "Invalid share token format.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userId1 = tokens[1];
+        String userId2 = tokens[2];
+
+        updateUserPremiumStatus(userId1, () -> updateUserPremiumStatus(userId2, () -> {
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Premium activated for both you and your partner!", Toast.LENGTH_SHORT).show();
+                loadUserProfile();
+            });
+        }));
+    }
+
+    private void updateUserPremiumStatus(String userId, Runnable onSuccess) {
+        userService.updateUser(userId, Map.of("isPremium", true), new UserService.UpdateCallback() {
+            @Override
+            public void onSuccess() {
+                onSuccess.run();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                runOnUiThread(() -> Toast.makeText(ProfileActivity.this, "Failed to update premium for user: " + errorMessage, Toast.LENGTH_SHORT).show());
+            }
+        });
     }
 
     @Override
