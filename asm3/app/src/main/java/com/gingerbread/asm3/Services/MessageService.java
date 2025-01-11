@@ -16,8 +16,8 @@ public class MessageService {
         firestore = FirebaseFirestore.getInstance();
     }
 
-    public void getMessages(String sharedToken, MessageListCallback callback, ErrorCallback errorCallback) {
-        CollectionReference chatRef = firestore.collection("chats").document(sharedToken).collection("messages");
+    public void getMessages(String conversationId, MessageListCallback callback, ErrorCallback errorCallback) {
+        CollectionReference chatRef = firestore.collection("chats").document(conversationId).collection("messages");
         chatRef.orderBy("timestamp", Query.Direction.ASCENDING).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 List<Message> messages = new ArrayList<>(task.getResult().toObjects(Message.class));
@@ -30,8 +30,8 @@ public class MessageService {
         });
     }
 
-    public void sendMessage(String sharedToken, Message message, SuccessCallback successCallback, ErrorCallback errorCallback) {
-        firestore.collection("chats").document(sharedToken).collection("messages").add(message)
+    public void sendMessage(String conversationId, Message message, SuccessCallback successCallback, ErrorCallback errorCallback) {
+        firestore.collection("chats").document(conversationId).collection("messages").add(message)
                 .addOnSuccessListener(documentReference -> successCallback.onSuccess())
                 .addOnFailureListener(e -> errorCallback.onError(e.getMessage()));
     }

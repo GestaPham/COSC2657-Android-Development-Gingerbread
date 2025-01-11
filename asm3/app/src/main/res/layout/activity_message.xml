@@ -8,7 +8,6 @@
     android:clipToPadding="false"
     android:paddingBottom="70dp">
 
-    <!-- Partner name -->
     <TextView
         android:id="@+id/textViewPartnerName"
         android:layout_width="0dp"
@@ -70,7 +69,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- No partner linked screen -->
     <LinearLayout
         android:id="@+id/layoutNoPartner"
         android:layout_width="0dp"
