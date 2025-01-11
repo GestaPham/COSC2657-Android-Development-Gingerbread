@@ -22,7 +22,9 @@ import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ChatbotActivity extends BaseActivity {
@@ -75,7 +77,9 @@ public class ChatbotActivity extends BaseActivity {
     private void loadChat() {
         findViewById(R.id.layoutNoPartner).setVisibility(View.GONE);
         findViewById(R.id.layoutChat).setVisibility(View.VISIBLE);
-        String conversationId = "AI_" + currentUserId;
+
+        String todayDate = new SimpleDateFormat("dd-MM-yy").format(new Date());
+        String conversationId = "AI_" + currentUserId + "_" + todayDate;
 
         messageService.getMessages(conversationId, messages -> {
             runOnUiThread(() -> {
@@ -121,15 +125,18 @@ public class ChatbotActivity extends BaseActivity {
     private void sendMessage() {
         String text = editTextMessage.getText().toString().trim();
 
+        String todayDate = new SimpleDateFormat("dd-MM-yy").format(new Date());
+        String conversationId = "AI_" + currentUserId + "_" + todayDate;
+
         if (TextUtils.isEmpty(text)) {
             Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Message userMessage = new Message(text, "AI_" + currentUserId, "AI", currentUserId, System.currentTimeMillis());
+        Message userMessage = new Message(text, conversationId, "AI", currentUserId, System.currentTimeMillis());
         addToConversationHistory(userMessage);
 
-        messageService.sendMessage("AI_" + currentUserId, userMessage, () -> {
+        messageService.sendMessage(conversationId, userMessage, () -> {
             runOnUiThread(() -> {
                 messages.add(userMessage);
                 chatAdapter.notifyItemInserted(messages.size() - 1);
