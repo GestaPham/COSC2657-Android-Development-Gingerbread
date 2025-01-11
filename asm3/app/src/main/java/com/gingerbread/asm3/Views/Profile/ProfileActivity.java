@@ -116,7 +116,7 @@ public class ProfileActivity extends BaseActivity {
                     user.setNationality(userData.get("nationality") != null ? userData.get("nationality").toString() : "");
                     user.setReligion(userData.get("religion") != null ? userData.get("religion").toString() : "");
                     user.setLocation(userData.get("location") != null ? userData.get("location").toString() : "");
-                    user.setPremium(userData.get("isPremium") != null && (boolean) userData.get("isPremium"));
+                    user.setPremium(userData.get("premium") != null && (boolean) userData.get("premium"));
                     user.setShareToken(userData.get("shareToken") != null ? userData.get("shareToken").toString() : "");
 
                     textViewName.setText(user.getName());
@@ -148,7 +148,6 @@ public class ProfileActivity extends BaseActivity {
 
         dialogView.findViewById(R.id.buttonPurchasePremium).setOnClickListener(view -> {
             createPaymentIntentAndPresentSheet();
-
             dialog.dismiss();
         });
 
@@ -206,7 +205,7 @@ public class ProfileActivity extends BaseActivity {
 
     private void setPremiumForUserAndPartner() {
         Map<String, Object> updates = new HashMap<>();
-        updates.put("isPremium", true);
+        updates.put("premium", true);
 
         userService.updateUser(user.getUserId(), updates, new UserService.UpdateCallback() {
             @Override
