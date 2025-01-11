@@ -298,7 +298,7 @@ public class MoodTrackerActivity extends AppCompatActivity {
         moodPieChart.invalidate();
 
         String mostFrequentMood = getMostFrequentMood(moodCounts);
-        moodSummaryText.setText("This month, you felt " + mostFrequentMood + " the most.");
+        moodSummaryText.setText("Overall, you felt " + mostFrequentMood + " the most.");
     }
 
     private String getMostFrequentMood(Map<String, Integer> moodCounts) {

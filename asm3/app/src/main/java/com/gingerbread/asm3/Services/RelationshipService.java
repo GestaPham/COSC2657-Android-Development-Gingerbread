@@ -54,6 +54,27 @@ public class RelationshipService {
         });
     }
 
+    public void getRelationshipByUserId(String userId, RelationshipCallback callback) {
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String userShareToken = documentSnapshot.getString("shareToken");
+                        if (userShareToken != null && userShareToken.startsWith("LINKED")) {
+                            getRelationshipByShareToken(userShareToken, callback);
+                        } else {
+                            callback.onFailure("No valid shareToken found for the current user");
+                        }
+                    } else {
+                        callback.onFailure("User document does not exist");
+                    }
+                })
+                .addOnFailureListener(e -> callback.onFailure("Error fetching user document: " + e.getMessage()));
+    }
+
+
     public void updateRelationship(String relationshipId, Map<String, Object> updates, UpdateCallback callback) {
         relationshipsCollection.document(relationshipId).update(updates).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {

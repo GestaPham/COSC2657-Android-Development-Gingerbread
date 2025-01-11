@@ -51,19 +51,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/profileImage" />
 
-        <EditText
-            android:id="@+id/editTextSearch"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/custom_text_bg"
-            android:hint="Search for your memories"
-            android:padding="12dp"
-            android:textColor="@color/text_dark"
-            android:textSize="18dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/profileImage" />
 
         <!-- Together stats -->
         <include
@@ -73,7 +60,7 @@
             android:layout_marginTop="24dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/editTextSearch" />
+            app:layout_constraintTop_toBottomOf="@id/profileImage" />
 
         <!-- Mood tracker -->
         <include
@@ -94,6 +81,21 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/mood_tracker_card" />
+
+        <TextView
+            android:id="@+id/noMemoriesTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="You have no memories yet. Time to create one!"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/mood_tracker_card"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
