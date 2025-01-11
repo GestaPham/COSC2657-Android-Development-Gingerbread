@@ -12,7 +12,7 @@ public class User implements Serializable {
     private String nationality;
     private String religion;
     private String location;
-    private boolean isPremium;
+    private boolean premium;
     private String fcmToken;            // For push notifications
     private String shareToken;          // For linking with a partner
     private String pendingPartner;      // check if there's a pending partner request
@@ -21,7 +21,7 @@ public class User implements Serializable {
     }
 
     public User(String userId, String name, String email, String profilePictureUrl, int age, String gender,
-                String nationality, String religion, String location, boolean isPremium, String fcmToken,
+                String nationality, String religion, String location, boolean premium, String fcmToken,
                 String shareToken, String pendingPartner) {
         this.userId = userId;
         this.name = name;
@@ -32,7 +32,7 @@ public class User implements Serializable {
         this.nationality = nationality;
         this.religion = religion;
         this.location = location;
-        this.isPremium = isPremium;
+        this.premium = premium;
         this.fcmToken = fcmToken;
         this.shareToken = shareToken;
         this.pendingPartner = pendingPartner;
@@ -111,11 +111,11 @@ public class User implements Serializable {
     }
 
     public boolean isPremium() {
-        return isPremium;
+        return premium;
     }
 
     public void setPremium(boolean premium) {
-        isPremium = premium;
+        this.premium = premium;
     }
 
     public String getFcmToken() {
