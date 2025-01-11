@@ -19,17 +19,26 @@ import com.gingerbread.asm3.Views.Authentication.LoginActivity;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 import com.gingerbread.asm3.Views.Support.HelpCenterActivity;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.functions.FirebaseFunctions;
+import com.stripe.android.PaymentConfiguration;
+import com.stripe.android.paymentsheet.PaymentSheet;
+import com.stripe.android.paymentsheet.PaymentSheetResult;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class ProfileActivity extends BaseActivity {
 
     private ImageView profileImageView;
     private TextView textViewName, textViewPremiumStatus;
-    private Button buttonMyPartner, buttonProfileDetails, buttonSupport, buttonUpgradePremium, buttonLogout;
+    private Button buttonMyPartner, buttonProfileDetails, buttonSupport,
+            buttonUpgradePremium, buttonLogout;
 
     private UserService userService;
     private User user;
+
+    private PaymentSheet paymentSheet;
+    private String paymentIntentClientSecret;
 
     private final ActivityResultLauncher<Intent> profileDetailsLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -45,6 +54,13 @@ public class ProfileActivity extends BaseActivity {
         getLayoutInflater().inflate(R.layout.activity_profile, findViewById(R.id.activity_content));
 
         userService = new UserService();
+
+        PaymentConfiguration.init(
+                getApplicationContext(),
+                "pk_test_51OOwHOADvj1zBNJ9a3T5i1b63iBtAIFT6bl01kSwklXlADIxTKHfruK8PRFia3iVdtfMW7yNUhyfGQs24hsqyIft00ksYsRucF"
+        );
+
+        paymentSheet = new PaymentSheet(this, this::onPaymentSheetResult);
 
         profileImageView = findViewById(R.id.profileImageView);
         textViewName = findViewById(R.id.textViewName);
@@ -73,7 +89,9 @@ public class ProfileActivity extends BaseActivity {
             startActivity(intent);
         });
 
-        buttonUpgradePremium.setOnClickListener(v -> showUpgradePremiumDialog());
+        buttonUpgradePremium.setOnClickListener(v -> {
+            showUpgradePremiumDialog();
+        });
 
         buttonLogout.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
@@ -93,13 +111,24 @@ public class ProfileActivity extends BaseActivity {
                     user = new User();
                     user.setUserId(userId);
                     user.setName(userData.get("name") != null ? userData.get("name").toString() : "");
+                    user.setAge(userData.get("age") != null ? (int) ((long) userData.get("age")) : 0);
+                    user.setGender(userData.get("gender") != null ? userData.get("gender").toString() : "");
+                    user.setNationality(userData.get("nationality") != null ? userData.get("nationality").toString() : "");
+                    user.setReligion(userData.get("religion") != null ? userData.get("religion").toString() : "");
+                    user.setLocation(userData.get("location") != null ? userData.get("location").toString() : "");
                     user.setPremium(userData.get("isPremium") != null && (boolean) userData.get("isPremium"));
                     user.setShareToken(userData.get("shareToken") != null ? userData.get("shareToken").toString() : "");
 
                     textViewName.setText(user.getName());
                     textViewPremiumStatus.setVisibility(user.isPremium() ? View.VISIBLE : View.GONE);
 
-                    buttonUpgradePremium.setVisibility(user.isPremium() ? View.GONE : View.VISIBLE);
+                    if (user.isPremium() && user.getShareToken() != null && user.getShareToken().startsWith("LINKED")) {
+                        buttonUpgradePremium.setEnabled(false);
+                        buttonUpgradePremium.setVisibility(View.GONE);
+                    } else {
+                        buttonUpgradePremium.setEnabled(true);
+                        buttonUpgradePremium.setVisibility(View.VISIBLE);
+                    }
                 }
 
                 @Override
@@ -118,61 +147,105 @@ public class ProfileActivity extends BaseActivity {
                 .create();
 
         dialogView.findViewById(R.id.buttonPurchasePremium).setOnClickListener(view -> {
-            openStripePaymentPage();
+            createPaymentIntentAndPresentSheet();
+
             dialog.dismiss();
         });
 
         dialog.show();
     }
 
-    private void openStripePaymentPage() {
-        Intent intent = new Intent(this, WebViewActivity.class);
-        intent.putExtra("url", "https://buy.stripe.com/test_8wMdUC63Lbgv5u86oo");
-        startActivityForResult(intent, 1001);
+    private void createPaymentIntentAndPresentSheet() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("sharedToken", user.getShareToken());
+
+        FirebaseFunctions.getInstance()
+                .getHttpsCallable("createPaymentIntent")
+                .call(data)
+                .addOnSuccessListener(httpsCallableResult -> {
+                    if (httpsCallableResult.getData() != null) {
+                        Map<String, Object> resultData = (Map<String, Object>) httpsCallableResult.getData();
+                        if (resultData.containsKey("error")) {
+                            Toast.makeText(this,
+                                    "Error: " + resultData.get("error"),
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            paymentIntentClientSecret = (String) resultData.get("clientSecret");
+                            presentPaymentSheet();
+                        }
+                    } else {
+                        Toast.makeText(this, "No response from server", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this,
+                            "Error calling createPaymentIntent: " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    private void presentPaymentSheet() {
+        PaymentSheet.Configuration configuration =
+                new PaymentSheet.Configuration("My Awesome App, Inc.");
 
-        if (requestCode == 1001 && resultCode == RESULT_OK) {
-            updatePremiumStatusForBothUsers();
+        paymentSheet.presentWithPaymentIntent(paymentIntentClientSecret, configuration);
+    }
+
+    private void onPaymentSheetResult(final PaymentSheetResult paymentSheetResult) {
+        if (paymentSheetResult instanceof PaymentSheetResult.Completed) {
+            setPremiumForUserAndPartner();
+        } else if (paymentSheetResult instanceof PaymentSheetResult.Canceled) {
+            Toast.makeText(this, "Payment canceled.", Toast.LENGTH_SHORT).show();
+        } else if (paymentSheetResult instanceof PaymentSheetResult.Failed) {
+            PaymentSheetResult.Failed failedResult = (PaymentSheetResult.Failed) paymentSheetResult;
+            Toast.makeText(this,
+                    "Payment failed: " + failedResult.getError().getMessage(),
+                    Toast.LENGTH_LONG).show();
         }
     }
 
-    private void updatePremiumStatusForBothUsers() {
-        if (user == null || user.getShareToken() == null || !user.getShareToken().startsWith("LINKED_")) {
-            Toast.makeText(this, "No valid relationship found to update premium status.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+    private void setPremiumForUserAndPartner() {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("isPremium", true);
 
-        String[] tokens = user.getShareToken().split("_");
-        if (tokens.length != 3) {
-            Toast.makeText(this, "Invalid share token format.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String userId1 = tokens[1];
-        String userId2 = tokens[2];
-
-        updateUserPremiumStatus(userId1, () -> updateUserPremiumStatus(userId2, () -> {
-            runOnUiThread(() -> {
-                Toast.makeText(this, "Premium activated for both you and your partner!", Toast.LENGTH_SHORT).show();
-                loadUserProfile();
-            });
-        }));
-    }
-
-    private void updateUserPremiumStatus(String userId, Runnable onSuccess) {
-        userService.updateUser(userId, Map.of("isPremium", true), new UserService.UpdateCallback() {
+        userService.updateUser(user.getUserId(), updates, new UserService.UpdateCallback() {
             @Override
             public void onSuccess() {
-                onSuccess.run();
+                if (user.getShareToken() != null && user.getShareToken().startsWith("LINKED_")) {
+                    String[] parts = user.getShareToken().split("_");
+                    if (parts.length == 3) {
+                        String partnerId = parts[2];
+
+                        userService.updateUser(partnerId, updates, new UserService.UpdateCallback() {
+                            @Override
+                            public void onSuccess() {
+                                Toast.makeText(ProfileActivity.this,
+                                        "Both you and your partner are now Premium!",
+                                        Toast.LENGTH_LONG).show();
+                                loadUserProfile();
+                            }
+
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                Toast.makeText(ProfileActivity.this,
+                                        "Error updating partner: " + errorMessage,
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                } else {
+                    Toast.makeText(ProfileActivity.this,
+                            "You are now Premium!",
+                            Toast.LENGTH_SHORT).show();
+                    loadUserProfile();
+                }
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                runOnUiThread(() -> Toast.makeText(ProfileActivity.this, "Failed to update premium for user: " + errorMessage, Toast.LENGTH_SHORT).show());
+                Toast.makeText(ProfileActivity.this,
+                        "Error updating user: " + errorMessage,
+                        Toast.LENGTH_LONG).show();
             }
         });
     }

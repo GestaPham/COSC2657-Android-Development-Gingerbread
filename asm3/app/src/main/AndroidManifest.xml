@@ -52,12 +52,36 @@
         <activity
             android:name=".Views.Profile.PartnerProfileActivity"
             android:exported="false" />
+
         <activity
             android:name=".Views.Profile.ProfileActivity"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="payment-success"
+                    android:scheme="myapp" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="payment-cancel"
+                    android:scheme="myapp" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".Views.Profile.ProfileDetailsActivity"
             android:exported="false" />
+
         <activity
             android:name=".Views.Profile.EditProfileActivity"
             android:exported="false" />
