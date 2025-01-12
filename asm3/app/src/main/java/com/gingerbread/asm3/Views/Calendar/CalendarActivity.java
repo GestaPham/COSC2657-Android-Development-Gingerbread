@@ -60,9 +60,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
     private MemoryAdapter memoryAdapter;
-    private HashMap<Long, List<String>> eventsMap = new HashMap<>();
-    private HashMap<String, Memory> memoryHashMap = new HashMap<>();
-    private HashMap<String, User> userHashMap = new HashMap<>();
     private List<Memory> userMemories = new ArrayList<>();
     private CalendarService calendarService = new CalendarService();
     private TextView viewAll;
@@ -70,7 +67,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private RelationshipService relationshipService = new RelationshipService();
     private UserService userService = new UserService();
     private String relationshipId;
-    private String argUserSharedToken;
     private List<Event> eventList;
     private EventAdapter eventAdapter;
     private HashMap<Long, Boolean> eventDates = new HashMap<>();
@@ -122,26 +118,27 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
             Bundle bundle = new Bundle();
             bundle.putString("selectedDate", new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate));
-            dialog.setArguments(bundle);
+            getRelationshipId(new RelationshipIdCallback() {
+                @Override
+                public void onSuccess(String relationshipId) {
+                    bundle.putString("relationshipId", relationshipId);
+                    dialog.setArguments(bundle);
 
-            dialog.setAddEventListener((name, date, description) -> {
-                getRelationshipId(new RelationshipIdCallback() {
-                    @Override
-                    public void onSuccess(String relationshipId) {
-                        Event event = new Event(UUID.randomUUID().toString(), currentUser.getUid(), relationshipId, name, date, description, null);
+                    dialog.setAddEventListener((name, date, description, relId) -> {
+                        Event event = new Event(UUID.randomUUID().toString(), currentUser.getUid(), relId, name, date, description, null);
 
                         calendarService.addEvent(event, CalendarActivity.this);
                         fetchEventsForDate(selectedDate);
-                    }
+                    });
 
-                    @Override
-                    public void onFailure(String errorMessage) {
-                        Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                    dialog.show(getSupportFragmentManager(), "AddEventBottomSheetDialog");
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                    Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
             });
-
-            dialog.show(getSupportFragmentManager(), "AddEventBottomSheetDialog");
         });
 
         addMemoryButton2.setOnClickListener(v -> addMemory());
@@ -158,54 +155,6 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         });
         fetchEventsForDate(selectedDate);
     }
-
-    private void markEventsOnCalendar() {
-        getRelationshipId(new RelationshipIdCallback() {
-            @Override
-            public void onSuccess(String relationshipId) {
-                calendarService.getAllEvents(currentUser.getUid(), new CalendarService.EventsCallback() {
-                    @Override
-                    public void onSuccess(List<Event> events) {
-                        eventDates.clear();
-                        for (Event event : events) {
-                            try {
-                                Date eventDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(event.getEventDate());
-                                if (eventDate != null) {
-                                    eventDates.put(eventDate.getTime(), true);
-                                }
-                            } catch (Exception e) {
-                                Log.e("CalendarActivity", "Error parsing event date", e);
-                            }
-                        }
-                        updateCalendarView();
-                    }
-
-                    @Override
-                    public void onFailure(String errorMessage) {
-                        Toast.makeText(CalendarActivity.this, "Error fetching events: " + errorMessage, Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void updateCalendarView() {
-        calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
-            @Override
-            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
-                long date = new GregorianCalendar(year, month, dayOfMonth).getTimeInMillis();
-                if (eventDates.containsKey(date)) {
-                    Toast.makeText(CalendarActivity.this, "Event on " + dayOfMonth + "/" + (month + 1) + "/" + year, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
-
 
     private void getRelationshipId(RelationshipIdCallback callback) {
         if (relationshipId != null) {
@@ -292,9 +241,23 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
     private void addMemory() {
         AddMemoryBottomSheetDialog addMemoryBottomSheetDialog = new AddMemoryBottomSheetDialog();
-        addMemoryBottomSheetDialog.show(getSupportFragmentManager(), "AddMemoryBottomSheet");
-        Log.d("CurrentUserID", currentUser.getUid());
+
+        getRelationshipId(new RelationshipIdCallback() {
+            @Override
+            public void onSuccess(String relationshipId) {
+                Bundle bundle = new Bundle();
+                bundle.putString("relationshipId", relationshipId);
+                addMemoryBottomSheetDialog.setArguments(bundle);
+                addMemoryBottomSheetDialog.show(getSupportFragmentManager(), "AddMemoryBottomSheetDialog");
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(CalendarActivity.this, "Failed to retrieve relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
 
     private void fetchUsersMemories(String currentUserId, Runnable onComplete) {
         getRelationshipId(new RelationshipIdCallback() {
@@ -368,17 +331,17 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
 
     @Override
-    public void onMemoryAdded(String name, String note, String date, String imageUrl) {
+    public void onMemoryAdded(String name, String note, String date, String imageUrl, String relationshipId) {
         Log.d("CurrentUserID", currentUser.getUid());
-        getCurrentUserRelationship();
 
         if (relationshipId != null) {
-            Log.d("relationShipId", relationshipId);
+            Log.d("RelationshipId", relationshipId);
             addNewMemory(name, note, date, imageUrl, currentUser.getUid(), relationshipId);
         } else {
-            addNewMemory(name, note, date, imageUrl, currentUser.getUid(), "");
+            Toast.makeText(this, "Relationship ID is missing. Unable to add memory.", Toast.LENGTH_SHORT).show();
         }
 
+        // Refresh memories after adding
         fetchUsersMemories(currentUser.getUid(), null);
     }
 
