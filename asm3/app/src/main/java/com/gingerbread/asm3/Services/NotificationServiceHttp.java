@@ -1,6 +1,13 @@
 package com.gingerbread.asm3.Services;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import org.json.JSONObject;
 
@@ -21,6 +28,7 @@ public class NotificationServiceHttp {
 
     public interface NotificationCallback {
         void onSuccess(String messageId);
+
         void onFailure(String errorMessage);
     }
 
@@ -66,5 +74,22 @@ public class NotificationServiceHttp {
                 callback.onSuccess(responseBody);
             }
         });
+    }
+
+    public void requestNotificationPermission(Context context, ActivityResultLauncher<String> permissionLauncher) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Notification permission already granted.");
+                return;
+            }
+            permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
+        } else {
+            NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
+            if (!notificationManagerCompat.areNotificationsEnabled()) {
+                Log.e(TAG, "Notifications are disabled. Ask the user to enable them in settings.");
+            } else {
+                Log.d(TAG, "Notifications are already enabled.");
+            }
+        }
     }
 }
