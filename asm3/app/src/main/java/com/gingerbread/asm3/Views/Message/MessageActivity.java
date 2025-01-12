@@ -120,13 +120,21 @@ public class MessageActivity extends BaseActivity {
     private void loadChat() {
         findViewById(R.id.layoutNoPartner).setVisibility(View.GONE);
         findViewById(R.id.layoutChat).setVisibility(View.VISIBLE);
-        messageService.getMessages(sharedToken, messages -> {
-            this.messages.clear();
-            this.messages.addAll(messages);
-            chatAdapter.notifyDataSetChanged();
-            recyclerViewChat.scrollToPosition(this.messages.size() - 1);
-        }, errorMessage -> {
-        });
+
+        messageService.listenForMessages(sharedToken, new MessageService.MessageListCallbackWithErrorHandling() {
+            @Override
+            public void onSuccess(List<Message> newMessages) {
+                messages.clear();
+                messages.addAll(newMessages);
+                chatAdapter.notifyDataSetChanged();
+                recyclerViewChat.scrollToPosition(messages.size() - 1);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(MessageActivity.this, "Error loading messages: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        }, errorMessage -> Toast.makeText(MessageActivity.this, "Failed to start listener: " + errorMessage, Toast.LENGTH_SHORT).show());
     }
 
     private void sendMessage() {
@@ -137,9 +145,6 @@ public class MessageActivity extends BaseActivity {
         }
         Message message = new Message(text, sharedToken, partnerId, currentUserId, System.currentTimeMillis());
         messageService.sendMessage(sharedToken, message, () -> {
-            messages.add(message);
-            chatAdapter.notifyItemInserted(messages.size() - 1);
-            recyclerViewChat.scrollToPosition(messages.size() - 1);
             editTextMessage.setText("");
             sendPushNotificationToPartner(text);
         }, errorMessage -> Toast.makeText(this, "Failed to send message: " + errorMessage, Toast.LENGTH_SHORT).show());
@@ -194,5 +199,11 @@ public class MessageActivity extends BaseActivity {
             }
         }
         return super.dispatchTouchEvent(event);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        messageService.stopListening();
     }
 }
