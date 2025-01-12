@@ -3,6 +3,7 @@ package com.gingerbread.asm3.Services;
 import com.gingerbread.asm3.Models.Message;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 public class MessageService {
 
     private final FirebaseFirestore firestore;
+    private ListenerRegistration listenerRegistration;
 
     public MessageService() {
         firestore = FirebaseFirestore.getInstance();
@@ -36,8 +38,36 @@ public class MessageService {
                 .addOnFailureListener(e -> errorCallback.onError(e.getMessage()));
     }
 
+    public void listenForMessages(String conversationId, MessageListCallbackWithErrorHandling callback, ErrorCallback errorCallback) {
+        CollectionReference chatRef = firestore.collection("chats").document(conversationId).collection("messages");
+        listenerRegistration = chatRef.orderBy("timestamp", Query.Direction.ASCENDING)
+                .addSnapshotListener((snapshot, e) -> {
+                    if (e != null) {
+                        errorCallback.onError(e.getMessage());
+                        return;
+                    }
+                    if (snapshot != null && !snapshot.isEmpty()) {
+                        List<Message> messages = new ArrayList<>(snapshot.toObjects(Message.class));
+                        callback.onSuccess(messages);
+                    }
+                });
+    }
+
+    public void stopListening() {
+        if (listenerRegistration != null) {
+            listenerRegistration.remove();
+            listenerRegistration = null;
+        }
+    }
+
     public interface MessageListCallback {
         void onSuccess(List<Message> messages);
+    }
+
+    public interface MessageListCallbackWithErrorHandling {
+        void onSuccess(List<Message> messages);
+
+        void onError(String errorMessage);
     }
 
     public interface SuccessCallback {
