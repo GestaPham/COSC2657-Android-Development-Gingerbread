@@ -1,10 +1,9 @@
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/light_background"
-    android:padding="16dp"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:padding="16dp">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -27,29 +26,34 @@
                 android:background="@drawable/ic_circle"
                 android:clipToOutline="true"
                 android:contentDescription="Profile Picture"
+                android:elevation="4dp"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_placeholder"
-                android:elevation="4dp" />
+                android:src="@drawable/ic_placeholder" />
 
             <TextView
                 android:id="@+id/textViewName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:text=""
                 android:textColor="@color/text_dark"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:gravity="center" />
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/textViewPremiumStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@drawable/premium_bg"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:padding="4dp"
+                android:textStyle="bold"
                 android:text="Premium"
-                android:textColor="@color/light_green"
-                android:textSize="14sp"
-                android:visibility="gone"
-                android:gravity="center" />
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:visibility="gone" />
+
 
             <Button
                 android:id="@+id/buttonMyPartner"

@@ -36,6 +36,7 @@ public class User implements Serializable {
         this.fcmToken = fcmToken;
         this.shareToken = shareToken;
         this.pendingPartner = pendingPartner;
+
     }
 
     public String getUserId() {

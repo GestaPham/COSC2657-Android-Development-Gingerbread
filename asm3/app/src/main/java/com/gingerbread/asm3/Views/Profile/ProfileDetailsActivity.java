@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
+import com.bumptech.glide.Glide;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
@@ -20,13 +21,12 @@ public class ProfileDetailsActivity extends BaseActivity {
     private TextView textViewAge, textViewGender, textViewNationality, textViewReligion, textViewLocation;
     private User user;
 
-    private final ActivityResultLauncher<Intent> editProfileLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    user = (User) result.getData().getSerializableExtra("user");
-                    loadProfileDetails();
-                }
-            });
+    private final ActivityResultLauncher<Intent> editProfileLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+            user = (User) result.getData().getSerializableExtra("user");
+            loadProfileDetails();
+        }
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +53,17 @@ public class ProfileDetailsActivity extends BaseActivity {
             intent.putExtra("user", user);
             editProfileLauncher.launch(intent);
         });
+
     }
+
+    @Override
+    public void onBackPressed() {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("user", user);
+        setResult(RESULT_OK, resultIntent);
+        super.onBackPressed();
+    }
+
 
     private void loadProfileDetails() {
         if (user != null) {
@@ -63,8 +73,19 @@ public class ProfileDetailsActivity extends BaseActivity {
             textViewNationality.setText(user.getNationality());
             textViewReligion.setText(user.getReligion());
             textViewLocation.setText(user.getLocation());
+
+            if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
+                Glide.with(this).load(user.getProfilePictureUrl()).placeholder(R.drawable.ic_placeholder).into(profileImageView);
+            } else {
+                profileImageView.setImageResource(R.drawable.ic_placeholder);
+            }
         } else {
             textViewName.setText("Error loading details");
+            textViewAge.setText("-");
+            textViewGender.setText("-");
+            textViewNationality.setText("-");
+            textViewReligion.setText("-");
+            textViewLocation.setText("-");
         }
     }
 

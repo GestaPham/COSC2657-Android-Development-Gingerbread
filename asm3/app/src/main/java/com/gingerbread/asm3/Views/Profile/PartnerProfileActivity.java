@@ -13,6 +13,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.gingerbread.asm3.Models.Relationship;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
@@ -122,6 +123,7 @@ public class PartnerProfileActivity extends BaseActivity {
                         partnerUser.setNationality(partnerData.get("nationality") != null ? partnerData.get("nationality").toString() : "N/A");
                         partnerUser.setReligion(partnerData.get("religion") != null ? partnerData.get("religion").toString() : "N/A");
                         partnerUser.setLocation(partnerData.get("location") != null ? partnerData.get("location").toString() : "N/A");
+                        partnerUser.setProfilePictureUrl(partnerData.get("profilePictureUrl") != null ? partnerData.get("profilePictureUrl").toString() : "");
 
                         displayPartnerProfile();
                     } else {
@@ -255,13 +257,7 @@ public class PartnerProfileActivity extends BaseActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String startDate = sdf.format(new Date());
 
-        Relationship newRelationship = new Relationship(
-                relationshipId,
-                sharedToken,
-                startDate,
-                1,
-                "Active"
-        );
+        Relationship newRelationship = new Relationship(relationshipId, sharedToken, startDate, 1, "Active");
 
         RelationshipService relationshipService = new RelationshipService();
         relationshipService.createRelationship(newRelationship, new RelationshipService.RelationshipCallback() {
@@ -302,11 +298,18 @@ public class PartnerProfileActivity extends BaseActivity {
         partnerTextViewLocation.setText(partnerUser.getLocation() != null ? partnerUser.getLocation() : "N/A");
         setProfileDetailsVisible(true);
 
+        if (partnerUser.getProfilePictureUrl() != null && !partnerUser.getProfilePictureUrl().isEmpty()) {
+            Glide.with(this).load(partnerUser.getProfilePictureUrl()).placeholder(R.drawable.ic_placeholder).error(R.drawable.ic_placeholder).into(partnerProfileImageView);
+        } else {
+            partnerProfileImageView.setImageResource(R.drawable.ic_placeholder);
+        }
+
         editTextPartnerEmail.setVisibility(View.GONE);
         buttonSendInvite.setVisibility(View.GONE);
         buttonAcceptInvite.setVisibility(View.GONE);
         buttonDenyInvite.setVisibility(View.GONE);
     }
+
 
     private void displayNoPartnerLinked() {
         partnerTextViewName.setText("No Partner Linked");

@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
@@ -33,6 +34,7 @@ import com.gingerbread.asm3.Views.MoodTracker.MoodTrackerActivity;
 import com.gingerbread.asm3.Views.Notification.NotificationActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.gson.Gson;
 
 import org.json.JSONObject;
@@ -65,18 +67,21 @@ public class MainActivity extends BaseActivity {
     private MoodService moodService;
     private MilestoneService milestoneService;
 
-    private final ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    Log.d("NotificationPermission", "Notification permission granted.");
-                } else {
-                    Log.e("NotificationPermission", "Notification permission denied.");
-                }
-            });
+    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+        if (isGranted) {
+            Log.d("NotificationPermission", "Notification permission granted.");
+        } else {
+            Log.e("NotificationPermission", "Notification permission denied.");
+        }
+    });
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Lock the theme to light
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         getLayoutInflater().inflate(R.layout.activity_main, findViewById(R.id.activity_content));
         NotificationServiceHttp notificationService = new NotificationServiceHttp();
@@ -106,9 +111,30 @@ public class MainActivity extends BaseActivity {
 
         fetchData();
 
+        checkNotifications();
+
         notificationIcon.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
-            startActivity(intent);
+            if (user != null && user.getShareToken() != null && !user.getShareToken().isEmpty()) {
+                relationshipService.getRelationshipByShareToken(user.getShareToken(), new RelationshipService.RelationshipCallback() {
+                    @Override
+                    public void onSuccess(Relationship relationship) {
+                        if (relationship != null) {
+                            Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
+                            intent.putExtra("relationshipId", relationship.getRelationshipId());
+                            startActivityForResult(intent, 100);
+                        } else {
+                            Toast.makeText(MainActivity.this, "No relationship found.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        Toast.makeText(MainActivity.this, "Error fetching relationship: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else {
+                Toast.makeText(MainActivity.this, "No linked relationship or user data missing.", Toast.LENGTH_SHORT).show();
+            }
         });
 
         Button moodTrackerButton = findViewById(R.id.moodTrackerButton);
@@ -121,6 +147,68 @@ public class MainActivity extends BaseActivity {
         initializeMemoryCarousel();
 
     }
+
+    private void checkNotifications() {
+        if (user == null || user.getShareToken() == null || user.getShareToken().isEmpty()) {
+            Log.e("Notifications", "User or ShareToken is null. Skipping checkNotifications.");
+            return;
+        }
+
+        relationshipService.getRelationshipByShareToken(user.getShareToken(), new RelationshipService.RelationshipCallback() {
+            @Override
+            public void onSuccess(Relationship relationship) {
+                if (relationship != null) {
+                    String relationshipId = relationship.getRelationshipId();
+                    Log.d("Notifications", "Observing notifications for relationshipId: " + relationshipId);
+                    observeNotifications(relationshipId);
+                } else {
+                    Log.e("Notifications", "Relationship not found for ShareToken.");
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e("Notifications", "Failed to fetch relationship: " + errorMessage);
+            }
+        });
+    }
+
+    private void observeNotifications(String relationshipId) {
+        firestore.collection("Notifications").whereEqualTo("relationshipId", relationshipId).addSnapshotListener((queryDocumentSnapshots, e) -> {
+            if (e != null) {
+                Log.e("Notifications", "Error observing notifications: " + e.getMessage());
+                return;
+            }
+
+            if (queryDocumentSnapshots != null) {
+                boolean hasUnread = false;
+
+                for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                    List<String> readBy = (List<String>) document.get("readBy");
+                    if (readBy == null || !readBy.contains(auth.getCurrentUser().getUid())) {
+                        hasUnread = true;
+                        break;
+                    }
+                }
+
+                Log.d("Notifications", "Has unread notifications: " + hasUnread);
+                updateNotificationIcon(hasUnread);
+            }
+        });
+    }
+
+    private void updateNotificationIcon(boolean hasUnread) {
+        runOnUiThread(() -> {
+            if (hasUnread) {
+                notificationIcon.setColorFilter(getResources().getColor(R.color.light_red));
+                Log.d("Notifications", "Notification icon updated to red.");
+            } else {
+                notificationIcon.setColorFilter(getResources().getColor(R.color.light_gray));
+                Log.d("Notifications", "Notification icon updated to gray.");
+            }
+        });
+    }
+
 
     @Override
     protected int getLayoutId() {
@@ -156,6 +244,8 @@ public class MainActivity extends BaseActivity {
                 } else {
                     displayNoPartnerMessage();
                 }
+
+                checkNotifications();
             }
 
             @Override
@@ -164,6 +254,7 @@ public class MainActivity extends BaseActivity {
             }
         });
     }
+
 
     private void displayNoPartnerMessage() {
         getLayoutInflater().inflate(R.layout.item_no_partner, findViewById(R.id.activity_content));
@@ -174,13 +265,20 @@ public class MainActivity extends BaseActivity {
             textViewGreeting.setText("Hi, " + user.getName());
 
             if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
-                Glide.with(this)
-                        .load(user.getProfilePictureUrl())
-                        .placeholder(R.drawable.ic_placeholder)
-                        .into(imageViewProfile);
+                if (!isDestroyed() && !isFinishing()) {
+                    Glide.with(this)
+                            .load(user.getProfilePictureUrl())
+                            .placeholder(R.drawable.ic_placeholder)
+                            .error(R.drawable.ic_placeholder)
+                            .into(imageViewProfile);
+                }
+
             } else {
                 imageViewProfile.setImageResource(R.drawable.ic_placeholder);
             }
+        } else {
+            textViewGreeting.setText("Hi, User");
+            imageViewProfile.setImageResource(R.drawable.ic_placeholder);
         }
     }
 
@@ -423,14 +521,6 @@ public class MainActivity extends BaseActivity {
         handler.postDelayed(runnable, 5000);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Refresh memory carousel when the activity resumes
-        initializeMemoryCarousel();
-    }
-
-
     private int getMoodIcon(String mood) {
         switch (mood) {
             case "Excited":
@@ -446,5 +536,25 @@ public class MainActivity extends BaseActivity {
             default:
                 return R.drawable.ic_circle;
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 100) {
+                checkNotifications();
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh memory carousel when the activity resumes
+        initializeMemoryCarousel();
+        // refresh notfication
+        checkNotifications();
     }
 }
