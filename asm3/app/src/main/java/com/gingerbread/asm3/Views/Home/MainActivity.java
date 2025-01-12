@@ -1,19 +1,17 @@
 package com.gingerbread.asm3.Views.Home;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
@@ -26,6 +24,7 @@ import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.CalendarService;
 import com.gingerbread.asm3.Services.MilestoneService;
 import com.gingerbread.asm3.Services.MoodService;
+import com.gingerbread.asm3.Services.NotificationServiceHttp;
 import com.gingerbread.asm3.Services.RelationshipService;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
@@ -36,12 +35,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -68,11 +65,22 @@ public class MainActivity extends BaseActivity {
     private MoodService moodService;
     private MilestoneService milestoneService;
 
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Log.d("NotificationPermission", "Notification permission granted.");
+                } else {
+                    Log.e("NotificationPermission", "Notification permission denied.");
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         getLayoutInflater().inflate(R.layout.activity_main, findViewById(R.id.activity_content));
+        NotificationServiceHttp notificationService = new NotificationServiceHttp();
+        notificationService.requestNotificationPermission(this, requestPermissionLauncher);
 
         imageViewProfile = findViewById(R.id.profileImage);
         notificationIcon = findViewById(R.id.notificationIcon);

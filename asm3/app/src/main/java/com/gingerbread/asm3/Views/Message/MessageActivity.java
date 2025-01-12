@@ -18,6 +18,7 @@ import com.gingerbread.asm3.Adapter.ChatAdapter;
 import com.gingerbread.asm3.Models.Message;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.MessageService;
+import com.gingerbread.asm3.Services.NotificationServiceHttp;
 import com.gingerbread.asm3.Services.UserService;
 import com.gingerbread.asm3.Views.BottomNavigation.BaseActivity;
 
@@ -29,6 +30,7 @@ public class MessageActivity extends BaseActivity {
 
     private UserService userService;
     private MessageService messageService;
+    private NotificationServiceHttp notificationService;
     private String currentUserId, partnerId, sharedToken, partnerName;
     private EditText editTextMessage;
     private ImageButton buttonSend;
@@ -37,6 +39,8 @@ public class MessageActivity extends BaseActivity {
     private List<Message> messages;
     private TextView textViewPartnerName;
 
+    private String userFcmToken, partnerFcmToken;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +48,7 @@ public class MessageActivity extends BaseActivity {
 
         userService = new UserService();
         messageService = new MessageService();
+        notificationService = new NotificationServiceHttp();
 
         currentUserId = userService.getCurrentUserId();
         editTextMessage = findViewById(R.id.editTextMessage);
@@ -65,6 +70,7 @@ public class MessageActivity extends BaseActivity {
             @Override
             public void onSuccess(Map<String, Object> userData) {
                 sharedToken = (String) userData.get("shareToken");
+                userFcmToken = (String) userData.get("fcmToken");
                 if (TextUtils.isEmpty(sharedToken) || !sharedToken.startsWith("LINKED_")) {
                     showNoPartnerMessage();
                 } else {
@@ -93,6 +99,7 @@ public class MessageActivity extends BaseActivity {
             @Override
             public void onSuccess(Map<String, Object> partnerData) {
                 partnerName = (String) partnerData.get("name");
+                partnerFcmToken = (String) partnerData.get("fcmToken");
                 textViewPartnerName.setText(partnerName != null ? partnerName : "Partner");
                 textViewPartnerName.setVisibility(View.VISIBLE);
             }
@@ -114,12 +121,20 @@ public class MessageActivity extends BaseActivity {
         findViewById(R.id.layoutNoPartner).setVisibility(View.GONE);
         findViewById(R.id.layoutChat).setVisibility(View.VISIBLE);
 
-        messageService.getMessages(sharedToken, messages -> {
-            this.messages.clear();
-            this.messages.addAll(messages);
-            chatAdapter.notifyDataSetChanged();
-            recyclerViewChat.scrollToPosition(this.messages.size() - 1);
-        }, errorMessage -> {});
+        messageService.listenForMessages(sharedToken, new MessageService.MessageListCallbackWithErrorHandling() {
+            @Override
+            public void onSuccess(List<Message> newMessages) {
+                messages.clear();
+                messages.addAll(newMessages);
+                chatAdapter.notifyDataSetChanged();
+                recyclerViewChat.scrollToPosition(messages.size() - 1);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(MessageActivity.this, "Error loading messages: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        }, errorMessage -> Toast.makeText(MessageActivity.this, "Failed to start listener: " + errorMessage, Toast.LENGTH_SHORT).show());
     }
 
     private void sendMessage() {
@@ -128,15 +143,26 @@ public class MessageActivity extends BaseActivity {
             Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
-
         Message message = new Message(text, sharedToken, partnerId, currentUserId, System.currentTimeMillis());
-
         messageService.sendMessage(sharedToken, message, () -> {
-            messages.add(message);
-            chatAdapter.notifyItemInserted(messages.size() - 1);
-            recyclerViewChat.scrollToPosition(messages.size() - 1);
             editTextMessage.setText("");
+            sendPushNotificationToPartner(text);
         }, errorMessage -> Toast.makeText(this, "Failed to send message: " + errorMessage, Toast.LENGTH_SHORT).show());
+    }
+
+    private void sendPushNotificationToPartner(String messageText) {
+        if (!TextUtils.isEmpty(partnerFcmToken)) {
+            String title = "New message from " + (TextUtils.isEmpty(partnerName) ? "Someone" : partnerName);
+            notificationService.sendPushNotification(partnerFcmToken, title, messageText, new NotificationServiceHttp.NotificationCallback() {
+                @Override
+                public void onSuccess(String messageId) {
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                }
+            });
+        }
     }
 
     @Override
@@ -166,7 +192,6 @@ public class MessageActivity extends BaseActivity {
                 v.getLocationOnScreen(location);
                 float x = event.getRawX() + v.getLeft() - location[0];
                 float y = event.getRawY() + v.getTop() - location[1];
-
                 if (x < v.getLeft() || x > v.getRight() || y < v.getTop() || y > v.getBottom()) {
                     hideKeyboard();
                     v.clearFocus();
@@ -174,5 +199,11 @@ public class MessageActivity extends BaseActivity {
             }
         }
         return super.dispatchTouchEvent(event);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        messageService.stopListening();
     }
 }
