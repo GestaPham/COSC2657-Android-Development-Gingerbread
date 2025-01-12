@@ -11,6 +11,9 @@ import android.widget.CalendarView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.prolificinteractive.materialcalendarview.CalendarDay;
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
+import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -50,6 +53,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.HashSet;
 
 public class CalendarActivity extends BaseActivity implements AddMemoryBottomSheetDialog.AddMemoryListener, MemoryAdapter.OnMemoryClickListener {
 
@@ -74,6 +78,7 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
     private List<Event> eventList;
     private EventAdapter eventAdapter;
     private HashMap<Long, Boolean> eventDates = new HashMap<>();
+    private MaterialCalendarView materialCalendarView;
 
 
     Gson gson = new Gson();
@@ -90,6 +95,9 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
         addMemoryButton2 = findViewById(R.id.addMemoryButton2);
         viewAll = findViewById(R.id.viewAllLink);
         selectedDate = calendarView.getDate();
+
+        setContentView(R.layout.activity_calendar);
+        materialCalendarView = findViewById(R.id.calendarView);
 
         RecyclerView recyclerViewEvents = findViewById(R.id.recyclerViewEvents);
         recyclerViewEvents.setLayoutManager(new LinearLayoutManager(this));
@@ -112,9 +120,14 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
         memoryAdapter = new MemoryAdapter(userMemories, this);
 
-        calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
-            selectedDate = new GregorianCalendar(year, month, dayOfMonth).getTimeInMillis();
-            fetchEventsForDate(selectedDate);
+        // calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
+        //     selectedDate = new GregorianCalendar(year, month, dayOfMonth).getTimeInMillis();
+        //     fetchEventsForDate(selectedDate);
+        // });
+
+        materialCalendarView.setOnDateChangedListener((widget, date, selected) -> {
+        selectedDate = date.getDate().getTime();
+        fetchEventsForDate(selectedDate);
         });
 
         addEventButton2.setOnClickListener(v -> {
@@ -157,42 +170,79 @@ public class CalendarActivity extends BaseActivity implements AddMemoryBottomShe
 
         });
         fetchEventsForDate(selectedDate);
+        markEventsOnCalendar();
     }
+
+    // private void markEventsOnCalendar() {
+    //     getRelationshipId(new RelationshipIdCallback() {
+    //         @Override
+    //         public void onSuccess(String relationshipId) {
+    //             calendarService.getAllEvents(currentUser.getUid(), new CalendarService.EventsCallback() {
+    //                 @Override
+    //                 public void onSuccess(List<Event> events) {
+    //                     eventDates.clear();
+    //                     for (Event event : events) {
+    //                         try {
+    //                             Date eventDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(event.getEventDate());
+    //                             if (eventDate != null) {
+    //                                 eventDates.put(eventDate.getTime(), true);
+    //                             }
+    //                         } catch (Exception e) {
+    //                             Log.e("CalendarActivity", "Error parsing event date", e);
+    //                         }
+    //                     }
+    //                     updateCalendarView();
+    //                 }
+
+    //                 @Override
+    //                 public void onFailure(String errorMessage) {
+    //                     Toast.makeText(CalendarActivity.this, "Error fetching events: " + errorMessage, Toast.LENGTH_SHORT).show();
+    //                 }
+    //             });
+    //         }
+
+    //         @Override
+    //         public void onFailure(String errorMessage) {
+    //             Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
+    //         }
+    //     });
+    // }
 
     private void markEventsOnCalendar() {
-        getRelationshipId(new RelationshipIdCallback() {
-            @Override
-            public void onSuccess(String relationshipId) {
-                calendarService.getAllEvents(currentUser.getUid(), new CalendarService.EventsCallback() {
-                    @Override
-                    public void onSuccess(List<Event> events) {
-                        eventDates.clear();
-                        for (Event event : events) {
-                            try {
-                                Date eventDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(event.getEventDate());
-                                if (eventDate != null) {
-                                    eventDates.put(eventDate.getTime(), true);
-                                }
-                            } catch (Exception e) {
-                                Log.e("CalendarActivity", "Error parsing event date", e);
+    getRelationshipId(new RelationshipIdCallback() {
+        @Override
+        public void onSuccess(String relationshipId) {
+            calendarService.getAllEvents(currentUser.getUid(), new CalendarService.EventsCallback() {
+                @Override
+                public void onSuccess(List<Event> events) {
+                    HashSet<CalendarDay> eventDays = new HashSet<>();
+                    for (Event event : events) {
+                        try {
+                            Date eventDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(event.getEventDate());
+                            if (eventDate != null) {
+                                eventDays.add(CalendarDay.from(eventDate));
                             }
+                        } catch (Exception e) {
+                            Log.e("CalendarActivity", "Error parsing event date", e);
                         }
-                        updateCalendarView();
                     }
 
-                    @Override
-                    public void onFailure(String errorMessage) {
-                        Toast.makeText(CalendarActivity.this, "Error fetching events: " + errorMessage, Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
+                    materialCalendarView.addDecorator(new EventDecorator(Color.RED, eventDays));
+                }
 
-            @Override
-            public void onFailure(String errorMessage) {
-                Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+                @Override
+                public void onFailure(String errorMessage) {
+                    Toast.makeText(CalendarActivity.this, "Error fetching events: " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @Override
+        public void onFailure(String errorMessage) {
+            Toast.makeText(CalendarActivity.this, "Error fetching relationship ID: " + errorMessage, Toast.LENGTH_SHORT).show();
+        }
+    });
+}
 
     private void updateCalendarView() {
         calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
