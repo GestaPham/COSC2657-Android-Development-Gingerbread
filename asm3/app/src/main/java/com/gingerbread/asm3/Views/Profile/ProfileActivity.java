@@ -266,6 +266,13 @@ public class ProfileActivity extends BaseActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        loadUserProfile();
+    }
+
+
+    @Override
     protected int getLayoutId() {
         return R.layout.activity_base;
     }

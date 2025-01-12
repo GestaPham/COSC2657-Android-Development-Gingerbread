@@ -53,7 +53,17 @@ public class ProfileDetailsActivity extends BaseActivity {
             intent.putExtra("user", user);
             editProfileLauncher.launch(intent);
         });
+
     }
+
+    @Override
+    public void onBackPressed() {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("user", user);
+        setResult(RESULT_OK, resultIntent);
+        super.onBackPressed();
+    }
+
 
     private void loadProfileDetails() {
         if (user != null) {

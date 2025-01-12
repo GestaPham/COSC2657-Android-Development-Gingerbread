@@ -117,14 +117,23 @@ public class EditProfileActivity extends BaseActivity {
             String uniqueFileName = "profile_images/" + user.getUserId() + ".jpg";
             StorageReference fileRef = storageRef.child(uniqueFileName);
 
-            fileRef.putFile(imageUri).addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                uploadedImageUrl = uri.toString();
-                listener.onImageUploaded(uploadedImageUrl);
-            })).addOnFailureListener(e -> {
-                Toast.makeText(this, "Image upload failed", Toast.LENGTH_SHORT).show();
-            });
+            fileRef.putFile(imageUri)
+                    .addOnSuccessListener(taskSnapshot -> {
+                        fileRef.getDownloadUrl()
+                                .addOnSuccessListener(uri -> {
+                                    uploadedImageUrl = uri.toString();
+                                    listener.onImageUploaded(uploadedImageUrl);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(this, "Failed to get image URL", Toast.LENGTH_SHORT).show();
+                                });
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Image upload failed", Toast.LENGTH_SHORT).show();
+                    });
         }
     }
+
 
     public interface ImageUploadListener {
         void onImageUploaded(String imageUrl);
@@ -193,6 +202,7 @@ public class EditProfileActivity extends BaseActivity {
             });
         }
     }
+
 
     @Override
     protected int getLayoutId() {
