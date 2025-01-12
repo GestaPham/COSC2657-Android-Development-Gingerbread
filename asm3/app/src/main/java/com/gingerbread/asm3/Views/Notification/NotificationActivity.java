@@ -138,7 +138,7 @@ public class NotificationActivity extends AppCompatActivity {
         String title;
 
         if ("memory".equals(notification.getType())) {
-            title = "Check the memory view.";
+            title = "New memory added, check the memory page.";
         } else if ("event".equals(notification.getType())) {
             title = "New event added, check your calendar.";
         } else {
