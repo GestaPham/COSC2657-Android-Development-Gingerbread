@@ -143,9 +143,11 @@ public class MessageActivity extends BaseActivity {
             Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        editTextMessage.setText("");
+
         Message message = new Message(text, sharedToken, partnerId, currentUserId, System.currentTimeMillis());
         messageService.sendMessage(sharedToken, message, () -> {
-            editTextMessage.setText("");
             sendPushNotificationToPartner(text);
         }, errorMessage -> Toast.makeText(this, "Failed to send message: " + errorMessage, Toast.LENGTH_SHORT).show());
     }
