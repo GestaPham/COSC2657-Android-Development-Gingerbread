@@ -122,6 +122,7 @@ public class PartnerProfileActivity extends BaseActivity {
                         partnerUser.setNationality(partnerData.get("nationality") != null ? partnerData.get("nationality").toString() : "N/A");
                         partnerUser.setReligion(partnerData.get("religion") != null ? partnerData.get("religion").toString() : "N/A");
                         partnerUser.setLocation(partnerData.get("location") != null ? partnerData.get("location").toString() : "N/A");
+                        partnerUser.setProfilePictureUrl(partnerData.get("profilePictureUrl") != null ? partnerData.get("profilePictureUrl").toString() : "");
 
                         displayPartnerProfile();
                     } else {

@@ -67,14 +67,13 @@ public class MainActivity extends BaseActivity {
     private MoodService moodService;
     private MilestoneService milestoneService;
 
-    private final ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    Log.d("NotificationPermission", "Notification permission granted.");
-                } else {
-                    Log.e("NotificationPermission", "Notification permission denied.");
-                }
-            });
+    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+        if (isGranted) {
+            Log.d("NotificationPermission", "Notification permission granted.");
+        } else {
+            Log.e("NotificationPermission", "Notification permission denied.");
+        }
+    });
 
 
     @Override
@@ -175,29 +174,27 @@ public class MainActivity extends BaseActivity {
     }
 
     private void observeNotifications(String relationshipId) {
-        firestore.collection("Notifications")
-                .whereEqualTo("relationshipId", relationshipId)
-                .addSnapshotListener((queryDocumentSnapshots, e) -> {
-                    if (e != null) {
-                        Log.e("Notifications", "Error observing notifications: " + e.getMessage());
-                        return;
+        firestore.collection("Notifications").whereEqualTo("relationshipId", relationshipId).addSnapshotListener((queryDocumentSnapshots, e) -> {
+            if (e != null) {
+                Log.e("Notifications", "Error observing notifications: " + e.getMessage());
+                return;
+            }
+
+            if (queryDocumentSnapshots != null) {
+                boolean hasUnread = false;
+
+                for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                    List<String> readBy = (List<String>) document.get("readBy");
+                    if (readBy == null || !readBy.contains(auth.getCurrentUser().getUid())) {
+                        hasUnread = true;
+                        break;
                     }
+                }
 
-                    if (queryDocumentSnapshots != null) {
-                        boolean hasUnread = false;
-
-                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                            List<String> readBy = (List<String>) document.get("readBy");
-                            if (readBy == null || !readBy.contains(auth.getCurrentUser().getUid())) {
-                                hasUnread = true;
-                                break;
-                            }
-                        }
-
-                        Log.d("Notifications", "Has unread notifications: " + hasUnread);
-                        updateNotificationIcon(hasUnread);
-                    }
-                });
+                Log.d("Notifications", "Has unread notifications: " + hasUnread);
+                updateNotificationIcon(hasUnread);
+            }
+        });
     }
 
     private void updateNotificationIcon(boolean hasUnread) {
@@ -268,13 +265,20 @@ public class MainActivity extends BaseActivity {
             textViewGreeting.setText("Hi, " + user.getName());
 
             if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
-                Glide.with(this)
-                        .load(user.getProfilePictureUrl())
-                        .placeholder(R.drawable.ic_placeholder)
-                        .into(imageViewProfile);
+                if (!isDestroyed() && !isFinishing()) {
+                    Glide.with(this)
+                            .load(user.getProfilePictureUrl())
+                            .placeholder(R.drawable.ic_placeholder)
+                            .error(R.drawable.ic_placeholder)
+                            .into(imageViewProfile);
+                }
+
             } else {
                 imageViewProfile.setImageResource(R.drawable.ic_placeholder);
             }
+        } else {
+            textViewGreeting.setText("Hi, User");
+            imageViewProfile.setImageResource(R.drawable.ic_placeholder);
         }
     }
 

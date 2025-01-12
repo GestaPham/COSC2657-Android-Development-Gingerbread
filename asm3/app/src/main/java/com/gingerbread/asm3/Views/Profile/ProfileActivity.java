@@ -12,6 +12,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 
+import com.bumptech.glide.Glide;
 import com.gingerbread.asm3.Models.User;
 import com.gingerbread.asm3.R;
 import com.gingerbread.asm3.Services.UserService;
@@ -118,9 +119,19 @@ public class ProfileActivity extends BaseActivity {
                     user.setLocation(userData.get("location") != null ? userData.get("location").toString() : "");
                     user.setPremium(userData.get("premium") != null && (boolean) userData.get("premium"));
                     user.setShareToken(userData.get("shareToken") != null ? userData.get("shareToken").toString() : "");
+                    user.setProfilePictureUrl(userData.get("profilePictureUrl") != null ? userData.get("profilePictureUrl").toString() : "");
 
                     textViewName.setText(user.getName());
                     textViewPremiumStatus.setVisibility(user.isPremium() ? View.VISIBLE : View.GONE);
+
+                    if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().isEmpty()) {
+                        Glide.with(ProfileActivity.this)
+                                .load(user.getProfilePictureUrl())
+                                .placeholder(R.drawable.ic_placeholder)
+                                .into(profileImageView);
+                    } else {
+                        profileImageView.setImageResource(R.drawable.ic_placeholder);
+                    }
 
                     if (user.isPremium() && user.getShareToken() != null && user.getShareToken().startsWith("LINKED")) {
                         buttonUpgradePremium.setEnabled(false);
@@ -134,8 +145,11 @@ public class ProfileActivity extends BaseActivity {
                 @Override
                 public void onFailure(String errorMessage) {
                     textViewName.setText("Error loading profile");
+                    Toast.makeText(ProfileActivity.this, "Failed to load user profile: " + errorMessage, Toast.LENGTH_SHORT).show();
                 }
             });
+        } else {
+            Toast.makeText(this, "No user logged in.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -213,7 +227,9 @@ public class ProfileActivity extends BaseActivity {
                 if (user.getShareToken() != null && user.getShareToken().startsWith("LINKED_")) {
                     String[] parts = user.getShareToken().split("_");
                     if (parts.length == 3) {
-                        String partnerId = parts[2];
+                        String userId1 = parts[1];
+                        String userId2 = parts[2];
+                        String partnerId = userId1.equals(user.getUserId()) ? userId2 : userId1;
 
                         userService.updateUser(partnerId, updates, new UserService.UpdateCallback() {
                             @Override
