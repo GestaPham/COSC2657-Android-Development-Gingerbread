@@ -4,6 +4,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.gingerbread.asm3.BuildConfig;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -19,8 +21,7 @@ public class OpenAIService {
 
     private static final String TAG = "OpenAIService";
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
-    private static final String API_KEY = "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";
-
+    private static final String API_KEY = BuildConfig.API_KEY;
     private static final String SYSTEM_CONTEXT = "I am a love and relationship consultant expert. I can answer any question or provide advice about love, relationships, or your feelings about your relationship. Feel free to greet me or have a casual conversation to start. However, if the topic strays entirely away from love or relationships, I will respond with: 'Sorry, I can only give advice about love or relationships.'";
     private final List<JSONObject> conversationHistory = new ArrayList<>();
 
@@ -73,7 +74,8 @@ public class OpenAIService {
 
         if (conversationHistory.isEmpty()) {
             conversationHistory.add(new JSONObject().put("role", "system")
-                    .put("content", SYSTEM_CONTEXT));}
+                    .put("content", SYSTEM_CONTEXT));
+        }
 
         conversationHistory.add(new JSONObject().put("role", "user").put("content", userInput));
 
